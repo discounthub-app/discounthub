@@ -134,3 +134,54 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+# === Node.js ===
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.env
+.env.local
+dist/
+build/
+.cache/
+
+# === Python ===
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.env
+.venv/
+venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# === Docker ===
+*.log
+*.pid
+docker-compose.override.yml
+.docker/
+docker.env
+
+# === VSCode ===
+.vscode/
+.history/
+.code-workspace
+
+# === OS-specific ===
+.DS_Store
+Thumbs.db
+
+# === Others (optional tools) ===
+coverage/
+*.sqlite3
+.mypy_cache/
+.pytest_cache/
+.idea/
+*.iml
