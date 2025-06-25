@@ -185,3 +185,4 @@ coverage/
 .pytest_cache/
 .idea/
 *.iml
+.env
