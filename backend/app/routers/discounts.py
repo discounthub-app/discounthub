@@ -16,3 +16,14 @@ def get_discounts():
             "url": "https://example.com"
         }
     ]
+from fastapi import Depends
+from sqlalchemy.orm import Session
+from app.database import get_db
+
+@router.post("/", response_model=DiscountOut)
+def create_discount(discount: DiscountCreate, db: Session = Depends(get_db)):
+    new_discount = Discount(**discount.dict())
+    db.add(new_discount)
+    db.commit()
+    db.refresh(new_discount)
+    return new_discount
