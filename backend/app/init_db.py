@@ -1,7 +1,8 @@
 from .database import Base, engine
-from .models import Discount
+
+# ВАЖНО: эти импорты должны быть ДО вызова create_all
+from app.models.seller import Seller
+from app.models.discount import Discount
 
 def init_db():
     Base.metadata.create_all(bind=engine)
-from app.models.seller import Seller  # добавь это
-from app.models.discount import Discount
