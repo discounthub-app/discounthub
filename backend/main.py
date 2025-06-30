@@ -1,7 +1,6 @@
 from fastapi import FastAPI
+from app.api import router as api_router
 
-app = FastAPI()
+app = FastAPI(title="DiscountHub API")
 
-@app.get("/")
-def read_root():
-    return {"message": "Hello from DiscountHub backend!"}
+app.include_router(api_router)
