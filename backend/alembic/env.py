@@ -4,10 +4,11 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 from alembic import context
 
-# Добавляем путь к backend/app
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'app'))
+# Добавляем путь к backend/, чтобы можно было импортировать app.database
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from database import Base
+from app.database import Base
+
 
 config = context.config
 fileConfig(config.config_file_name)
