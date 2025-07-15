@@ -9,6 +9,8 @@ services:
       - .env
     depends_on:
       - db
+    volumes:
+      - .:/app  # 👈 добавляем эту строку
 
   frontend:
     build: ./frontend
