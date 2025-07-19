@@ -7,7 +7,8 @@ from alembic import context
 # Добавляем путь к backend/app/
 
 
-from app.database import Base  # ✅ импорт без "app." — мы уже внутри неё
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'app'))
+from database import Base
 
 config = context.config
 fileConfig(config.config_file_name)
