@@ -4,7 +4,7 @@ FROM python:3.11
 WORKDIR /app
 
 # Копируем только backend в контейнер
-COPY ./backend /app
+COPY . .
 
 # Устанавливаем зависимости
 RUN pip install -r requirements.txt
