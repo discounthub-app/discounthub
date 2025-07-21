@@ -44,7 +44,7 @@ jobs:
 
       - name: Run Alembic migrations
         env:
-          DATABASE_URL: postgresql+psycopg2://discounthub_user:discounthub_password@postgres:5432/discounthub
+          DATABASE_URL: postgresql+psycopg2://discounthub_user:discounthub_password@localhost:5432/discounthub
         run: |
           cd backend
           python -m alembic upgrade head
