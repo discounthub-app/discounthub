@@ -1,18 +1,22 @@
 from logging.config import fileConfig
+import os
+
 from sqlalchemy import engine_from_config, pool
 from alembic import context
 
 from app.db import Base
 from app import models  # чтобы Alembic видел все модели
 
-# Интерпретация alembic.ini (логгеры)
+# Интерпретация файла alembic.ini (логгеры)
 config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
+# 👉 Добавляем подстановку DATABASE_URL
+config.set_main_option("sqlalchemy.url", os.environ["DATABASE_URL"])
+
 # Метаданные для Alembic (используются при autogenerate)
 target_metadata = Base.metadata
-
 
 
 def run_migrations_offline() -> None:
