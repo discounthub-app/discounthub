@@ -47,4 +47,4 @@ jobs:
           DATABASE_URL: postgresql+psycopg2://discounthub_user:discounthub_password@localhost:5432/discounthub
         run: |
           cd backend
-          alembic upgrade head
+          python -m alembic upgrade head
