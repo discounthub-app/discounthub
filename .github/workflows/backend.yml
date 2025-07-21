@@ -27,24 +27,24 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+steps:
+  - name: Checkout repository
+    uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+  - name: Set up Python
+    uses: actions/setup-python@v5
+    with:
+      python-version: "3.11"
 
-      - name: Install dependencies
-        run: |
-          cd backend
-          pip install --upgrade pip
-          pip install -r requirements.txt
+  - name: Install dependencies
+    run: |
+      cd backend
+      pip install --upgrade pip
+      pip install -r requirements.txt
 
-      - name: Run Alembic migrations
-        env:
-          DATABASE_URL: postgresql+psycopg2://discounthub_user:discounthub_password@localhost:5432/discounthub
-        run: |
-          cd backend
-          python -m alembic upgrade head
+  - name: Run Alembic migrations
+    env:
+      DATABASE_URL: postgresql+psycopg2://discounthub_user:discounthub_password@postgres:5432/discounthub
+    run: |
+      cd backend
+      python -m alembic upgrade head
