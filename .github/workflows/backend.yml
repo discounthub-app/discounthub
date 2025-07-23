@@ -43,8 +43,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run Alembic migrations
-        env:
-          DATABASE_URL: postgresql+psycopg2://discounthub_user:discounthub_password@postgres:5432/discounthub
         run: |
           cd backend
+          export DATABASE_URL=postgresql+psycopg2://discounthub_user:discounthub_password@postgres:5432/discounthub
           python -m alembic upgrade head
