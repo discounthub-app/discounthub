@@ -6,6 +6,7 @@ class DiscountBase(BaseModel):
     title: str
     description: Optional[str] = None
     price: float
+    old_price: Optional[float] = None  # ✅ Добавляем это
     seller_id: int
 
 
