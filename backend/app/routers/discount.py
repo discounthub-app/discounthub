@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.db import get_db
-from app import schemas
+from app.schemas.discount import DiscountOut, DiscountCreate
 from app.crud import discount as crud
 
 router = APIRouter(
