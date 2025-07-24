@@ -1,15 +1,16 @@
 from fastapi import FastAPI
 from sqlalchemy.orm import Session
 from sqlalchemy import text
+
 from app.db import SessionLocal
 from app.routers.discount import router as discount_router
-from app.routers.seller import router as seller_router  # 👈 добавили
+from app.routers.seller import router as seller_router
 
 app = FastAPI()
 
-# Подключаем router-ы
+# Подключаем роутеры
 app.include_router(discount_router)
-app.include_router(seller_router)  # 👈 добавили
+app.include_router(seller_router)
 
 @app.get("/ping")
 def ping():
@@ -19,4 +20,5 @@ def ping():
 def get_users():
     db: Session = SessionLocal()
     users = db.execute(text("SELECT id, username, email FROM users")).mappings().all()
+    db.close()
     return users
