@@ -9,10 +9,10 @@ router = APIRouter(
     tags=["discounts"]
 )
 
-@router.post("/", response_model=schemas.DiscountOut)
-def create_discount(discount: schemas.DiscountCreate, db: Session = Depends(get_db)):
+@router.post("/", response_model=DiscountOut)
+def create_discount(discount: DiscountCreate, db: Session = Depends(get_db)):
     return crud.create_discount(db=db, discount=discount)
 
-@router.get("/", response_model=list[schemas.DiscountOut])
+@router.get("/", response_model=list[DiscountOut])
 def read_discounts(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return crud.get_discounts(db=db, skip=skip, limit=limit)
