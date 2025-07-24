@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String
-from sqlalchemy.orm import relationship  # ✅ добавлено
+from sqlalchemy.orm import relationship
 from app.db import Base
 
 class User(Base):
@@ -10,4 +10,5 @@ class User(Base):
     username = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
 
-    # ✅ Добавлена связь
+    # ✅ Связь с таблицей user_profiles
+    profile = relationship("UserProfile", back_populates="user", uselist=False)
