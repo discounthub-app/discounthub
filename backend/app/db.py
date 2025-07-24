@@ -2,14 +2,18 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-# Параметры подключения из docker-compose.yml
-DATABASE_URL = "postgresql://discounthub_user:secret123@db:5432/discounthub"
+import os
 
-# Создаём движок
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+psycopg2://discounthub_user:secret123@app_db:5432/discounthub")
+
 engine = create_engine(DATABASE_URL)
-
-# Создаём сессию
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Базовый класс для моделей
 Base = declarative_base()
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

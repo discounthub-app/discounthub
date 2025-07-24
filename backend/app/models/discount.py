@@ -1,0 +1,15 @@
+from sqlalchemy import Column, Integer, String, Float, ForeignKey
+from sqlalchemy.orm import relationship
+from app.db import Base
+
+class Discount(Base):
+    __tablename__ = "discounts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=False)
+    description = Column(String)
+    price = Column(Float, nullable=False)
+    old_price = Column(Float)
+    seller_id = Column(Integer, ForeignKey("users.id"))
+
+seller = relationship("Seller", back_populates="discounts")
