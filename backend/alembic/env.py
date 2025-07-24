@@ -1,5 +1,4 @@
 from logging.config import fileConfig
-import os
 
 from sqlalchemy import engine_from_config, pool
 from alembic import context
@@ -7,13 +6,18 @@ from alembic import context
 from app.db import Base
 from app.models.user import User
 from app.models.discount import Discount
+from app.models.store import Store  # если добавляли
+from app.config import settings  # ✅ импортируем настройки
 
+# Загружаем конфиг Alembic
 config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-config.set_main_option("sqlalchemy.url", os.environ["DATABASE_URL"])
+# ✅ Устанавливаем URL к базе данных из Pydantic-настроек
+config.set_main_option("sqlalchemy.url", settings.database_url)
 
+# Метаинформация о моделях
 target_metadata = Base.metadata
 
 def run_migrations_offline() -> None:
