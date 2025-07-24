@@ -10,6 +10,6 @@ class Discount(Base):
     description = Column(String)
     price = Column(Float, nullable=False)
     old_price = Column(Float)
-    seller_id = Column(Integer, ForeignKey("users.id"))
+    seller_id = Column(Integer, ForeignKey("sellers.id"))
 
 seller = relationship("Seller", back_populates="discounts")
