@@ -1,14 +1,18 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from ..db import get_db
-from ..schemas.discount import DiscountCreate, DiscountOut
-from ..crud.discount import create_discount, get_discounts
-router = APIRouter(prefix="/discounts", tags=["discounts"])
+from app.db import get_db
+from app import schemas
+from app.crud import discount as crud
 
-@router.post("/", response_model=DiscountOut)
-def create_new_discount(discount: DiscountCreate, db: Session = Depends(get_db)):
-    return create_discount(db, discount)
+router = APIRouter(
+    prefix="/discounts",
+    tags=["discounts"]
+)
 
-@router.get("/", response_model=list[DiscountOut])
-def read_discounts(db: Session = Depends(get_db)):
-    return get_discounts(db)
+@router.post("/", response_model=schemas.DiscountOut)
+def create_discount(discount: schemas.DiscountCreate, db: Session = Depends(get_db)):
+    return crud.create_discount(db=db, discount=discount)
+
+@router.get("/", response_model=list[schemas.DiscountOut])
+def read_discounts(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    return crud.get_discounts(db=db, skip=skip, limit=limit)
