@@ -11,4 +11,3 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
 
     # ✅ Добавлена связь
-    discounts = relationship("Discount", back_populates="seller")
