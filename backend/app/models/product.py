@@ -10,9 +10,9 @@ class Product(Base):
     description = Column(String, nullable=True)
     price = Column(Float, nullable=False)
 
-    brand_id = Column(Integer, ForeignKey("brands.id"))
-    category_id = Column(Integer, ForeignKey("categories.id"))
-    store_id = Column(Integer, ForeignKey("stores.id"))
+    brand_id = Column(Integer, ForeignKey("brands.id"), nullable=False)
+    category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
+    store_id = Column(Integer, ForeignKey("stores.id"), nullable=False)
 
     brand = relationship("Brand", back_populates="products")
     category = relationship("Category", back_populates="products")
