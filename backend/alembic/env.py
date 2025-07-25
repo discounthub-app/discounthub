@@ -3,9 +3,13 @@ from sqlalchemy import engine_from_config, pool
 from alembic import context
 
 from app.db import Base
+
 from app.models.user import User
 from app.models.discount import Discount
+from app.models.seller import Seller
 from app.models.store import Store
+from app.models.category import Category
+from app.models.brand import Brand  # ✅ добавили
 
 from app.config import settings  # ✅ Новая строка
 
