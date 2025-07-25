@@ -17,7 +17,7 @@ jobs:
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
-
+          
       - name: 🚀 Run remote SSH commands
         run: |
           echo "🔧 Connecting to VPS and deploying DiscountHub"
@@ -26,4 +26,7 @@ jobs:
             git pull origin main
             docker compose down
             docker compose up -d --build
+
+            # Выполнить миграции Alembic внутри контейнера backend
+            docker exec app_backend alembic upgrade head
           EOF
