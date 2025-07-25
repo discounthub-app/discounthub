@@ -19,3 +19,4 @@ class Discount(Base):
 
     feedbacks = relationship("Feedback", back_populates="discount")
     tags = relationship("DiscountTag", back_populates="discount")
+    favorites = relationship("Favorite", back_populates="discount", cascade="all, delete-orphan")
