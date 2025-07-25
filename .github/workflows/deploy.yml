@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:  # 👈 вручную запускать можно будет
 
 jobs:
   deploy:
@@ -13,7 +14,7 @@ jobs:
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
 
-      - name: 🧪 Create .env for Alembic (for local actions run)
+      - name: 🧪 Create .env for Alembic
         run: |
           echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
           echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
@@ -29,23 +30,10 @@ jobs:
       - name: 🚀 Run remote SSH commands
         run: |
           echo "🔧 Connecting to VPS and deploying DiscountHub"
-          ssh -o StrictHostKeyChecking=no "${{ secrets.USER }}@${{ secrets.HOST }}" << EOF
+          ssh -o StrictHostKeyChecking=no "${{ secrets.USER }}@${{ secrets.HOST }}" << 'EOF'
             cd /app
-
-            echo "📄 Creating .env on server"
-            cat > .env <<EOL
-POSTGRES_DB=${{ secrets.POSTGRES_DB }}
-POSTGRES_USER=${{ secrets.POSTGRES_USER }}
-POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
-POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}
-EOL
-
-            echo "📦 Pull latest and rebuild"
             git pull origin main
             docker compose down
             docker compose up -d --build
-
-            echo "📈 Alembic migrations"
             docker exec app_backend alembic upgrade head
           EOF
