@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:  # ✅ позволяет запускать вручную из GitHub UI
 
 jobs:
   deploy:
@@ -25,6 +26,7 @@ jobs:
           echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> $GITHUB_ENV
           echo "POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}" >> $GITHUB_ENV
           echo "POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}" >> $GITHUB_ENV
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> $GITHUB_ENV
 
       - name: 🚀 Run remote SSH commands
         run: |
@@ -34,7 +36,5 @@ jobs:
             git pull origin main
             docker compose down
             docker compose up -d --build
-
-            # Выполнить миграции Alembic внутри контейнера backend
             docker exec app_backend alembic upgrade head
           EOF
