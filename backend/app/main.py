@@ -18,6 +18,7 @@ from app.routers.notification import router as notification_router
 from app.routers.favorite import router as favorite_router
 from app.routers.tag import router as tag_router
 from app.routers.city import router as city_router
+from app.routers.region import router as region_router
 
 app = FastAPI(docs_url=None, redoc_url="/api")
 
@@ -35,6 +36,7 @@ app.include_router(banner_router)  # ✅ Добавить эту строку
 app.include_router(notification_router)
 app.include_router(favorite_router)
 app.include_router(tag_router)
+app.include_router(region_router)  # ✅ Новый роутер
 app.include_router(city_router)
 
 @app.get("/ping")
