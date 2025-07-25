@@ -1,15 +1,15 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from app.db import get_db
-from app import models
+from app.models.store import Store
 from app.schemas.store import StoreCreate, StoreUpdate, StoreOut
 
 router = APIRouter(prefix="/stores", tags=["Stores"])
 
 
 @router.post("/", response_model=StoreOut)
-def create_store(store: StoreCreate, db: Session = Depends(get_db)):
-    db_store = models.store.Store(**store.dict())
+def create_store_view(store: StoreCreate, db: Session = Depends(get_db)):
+    db_store = Store(**store.dict())
     db.add(db_store)
     db.commit()
     db.refresh(db_store)
@@ -18,12 +18,12 @@ def create_store(store: StoreCreate, db: Session = Depends(get_db)):
 
 @router.get("/", response_model=list[StoreOut])
 def get_stores(db: Session = Depends(get_db)):
-    return db.query(models.store.Store).all()
+    return db.query(Store).all()
 
 
 @router.get("/{store_id}", response_model=StoreOut)
 def get_store(store_id: int, db: Session = Depends(get_db)):
-    store = db.query(models.store.Store).get(store_id)
+    store = db.query(Store).get(store_id)
     if not store:
         raise HTTPException(status_code=404, detail="Store not found")
     return store
@@ -31,7 +31,7 @@ def get_store(store_id: int, db: Session = Depends(get_db)):
 
 @router.put("/{store_id}", response_model=StoreOut)
 def update_store(store_id: int, updated: StoreUpdate, db: Session = Depends(get_db)):
-    store = db.query(models.store.Store).get(store_id)
+    store = db.query(Store).get(store_id)
     if not store:
         raise HTTPException(status_code=404, detail="Store not found")
     for key, value in updated.dict().items():
@@ -43,7 +43,7 @@ def update_store(store_id: int, updated: StoreUpdate, db: Session = Depends(get_
 
 @router.delete("/{store_id}")
 def delete_store(store_id: int, db: Session = Depends(get_db)):
-    store = db.query(models.store.Store).get(store_id)
+    store = db.query(Store).get(store_id)
     if not store:
         raise HTTPException(status_code=404, detail="Store not found")
     db.delete(store)
