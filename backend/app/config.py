@@ -1,17 +1,11 @@
 from pydantic_settings import BaseSettings
 
-
 class Settings(BaseSettings):
-    app_name: str = "DiscountHub"
-    app_host: str = "0.0.0.0"
-    app_port: int = 8000
-    debug: bool = True
-
     postgres_db: str
     postgres_user: str
     postgres_password: str
     postgres_host: str
-    postgres_port: int
+    postgres_port: str
 
     @property
     def database_url(self) -> str:
@@ -22,6 +16,6 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
-
+        extra = "allow"
 
 settings = Settings()
