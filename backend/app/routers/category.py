@@ -36,3 +36,14 @@ def delete_category(category_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Category not found")
     db.delete(category)
     db.commit()
+
+@router.put("/{category_id}", response_model=CategoryOut)
+def update_category(category_id: int, updated: CategoryCreate, db: Session = Depends(get_db)):
+    category = db.query(Category).get(category_id)
+    if not category:
+        raise HTTPException(status_code=404, detail="Category not found")
+    for key, value in updated.model_dump().items():
+        setattr(category, key, value)
+    db.commit()
+    db.refresh(category)
+    return category
