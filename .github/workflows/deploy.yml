@@ -13,7 +13,7 @@ jobs:
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
 
-      - name: 🧪 Create .env for Alembic (locally in Actions)
+      - name: 🧪 Create .env for Alembic (for local actions run)
         run: |
           echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
           echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
@@ -29,10 +29,10 @@ jobs:
       - name: 🚀 Run remote SSH commands
         run: |
           echo "🔧 Connecting to VPS and deploying DiscountHub"
-          ssh -o StrictHostKeyChecking=no "${{ secrets.USER }}@${{ secrets.HOST }}" << 'EOF'
+          ssh -o StrictHostKeyChecking=no "${{ secrets.USER }}@${{ secrets.HOST }}" << EOF
             cd /app
 
-            echo "📄 Writing .env file"
+            echo "📄 Creating .env on server"
             cat > .env <<EOL
 POSTGRES_DB=${{ secrets.POSTGRES_DB }}
 POSTGRES_USER=${{ secrets.POSTGRES_USER }}
@@ -41,11 +41,11 @@ POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
 POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}
 EOL
 
-            echo "📦 Pulling latest code and building"
+            echo "📦 Pull latest and rebuild"
             git pull origin main
             docker compose down
             docker compose up -d --build
 
-            echo "📈 Running Alembic migrations"
+            echo "📈 Alembic migrations"
             docker exec app_backend alembic upgrade head
           EOF
