@@ -18,3 +18,4 @@ class Discount(Base):
     seller = relationship("Seller", back_populates="discounts")
     product = relationship("Product", back_populates="discounts")
     feedbacks = relationship("Feedback", back_populates="discount")
+    tags = relationship("DiscountTag", back_populates="discount")
