@@ -1,7 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, ForeignKey
 from sqlalchemy.orm import relationship
 from app.db import Base
-from app.models.product import Product  # 👈 вот эта строка
 
 class Discount(Base):
     __tablename__ = "discounts"
@@ -17,5 +16,6 @@ class Discount(Base):
 
     seller = relationship("Seller", back_populates="discounts")
     product = relationship("Product", back_populates="discounts")
+
     feedbacks = relationship("Feedback", back_populates="discount")
     tags = relationship("DiscountTag", back_populates="discount")
