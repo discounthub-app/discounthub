@@ -18,7 +18,7 @@ from app.routers.notification import router as notification_router
 from app.routers.favorite import router as favorite_router
 from app.routers.tag import router as tag_router
 
-app = FastAPI()
+app = FastAPI(docs_url=None, redoc_url="/api")
 
 # Подключение роутеров
 app.include_router(discount_router)
@@ -45,7 +45,7 @@ def get_users():
     users = db.execute(text("SELECT id, username, email FROM users")).mappings().all()
     return users
 
-# Переадресация /api на /redoc
-@app.get("/api", include_in_schema=False)
-def redirect_to_redoc():
-    return RedirectResponse(url="/redoc")
+
+@app.get("/docs", include_in_schema=False)
+async def custom_swagger_ui_html():
+    return get_swagger_ui_html(openapi_url="/openapi.json", title="DiscountHub API")
