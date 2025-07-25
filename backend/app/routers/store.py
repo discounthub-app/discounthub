@@ -1,13 +1,14 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from app.db import get_db
-from app import models, schemas
+from app import models
+from app.schemas.store import StoreCreate, StoreUpdate, StoreOut
 
 router = APIRouter(prefix="/stores", tags=["Stores"])
 
 
-@router.post("/", response_model=schemas.store.StoreOut)
-def create_store(store: schemas.store.StoreCreate, db: Session = Depends(get_db)):
+@router.post("/", response_model=StoreOut)
+def create_store(store: StoreCreate, db: Session = Depends(get_db)):
     db_store = models.store.Store(**store.dict())
     db.add(db_store)
     db.commit()
@@ -15,12 +16,12 @@ def create_store(store: schemas.store.StoreCreate, db: Session = Depends(get_db)
     return db_store
 
 
-@router.get("/", response_model=list[schemas.store.StoreOut])
+@router.get("/", response_model=list[StoreOut])
 def get_stores(db: Session = Depends(get_db)):
     return db.query(models.store.Store).all()
 
 
-@router.get("/{store_id}", response_model=schemas.store.StoreOut)
+@router.get("/{store_id}", response_model=StoreOut)
 def get_store(store_id: int, db: Session = Depends(get_db)):
     store = db.query(models.store.Store).get(store_id)
     if not store:
@@ -28,8 +29,8 @@ def get_store(store_id: int, db: Session = Depends(get_db)):
     return store
 
 
-@router.put("/{store_id}", response_model=schemas.store.StoreOut)
-def update_store(store_id: int, updated: schemas.store.StoreUpdate, db: Session = Depends(get_db)):
+@router.put("/{store_id}", response_model=StoreOut)
+def update_store(store_id: int, updated: StoreUpdate, db: Session = Depends(get_db)):
     store = db.query(models.store.Store).get(store_id)
     if not store:
         raise HTTPException(status_code=404, detail="Store not found")
