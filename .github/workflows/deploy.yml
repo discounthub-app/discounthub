@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:  # 👈 вручную запускать можно будет
+  workflow_dispatch:  # 👈 позволяет вручную запускать
 
 jobs:
   deploy:
@@ -31,18 +31,16 @@ jobs:
         run: |
           echo "🔧 Connecting to VPS and deploying DiscountHub"
           ssh -o StrictHostKeyChecking=no "${{ secrets.USER }}@${{ secrets.HOST }}" << 'EOF'
-           cd /app
-           git pull origin main
+            cd /app
+            git pull origin main
 
-           # 🛠️ Создание .env на самом сервере (важно!)
-           echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" > .env
-           echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
-           echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
-           echo "POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}" >> .env
-           echo "POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}" >> .env
+            echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" > .env
+            echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
+            echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
+            echo "POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}" >> .env
+            echo "POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}" >> .env
 
-           docker compose down
-           docker compose up -d --build
-
-           docker exec app_backend alembic upgrade head
-    EOF
+            docker compose down
+            docker compose up -d --build
+            docker exec app_backend alembic upgrade head
+          EOF
