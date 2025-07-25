@@ -18,4 +18,5 @@ class Product(Base):
     category = relationship("Category", back_populates="products")
     store = relationship("Store", back_populates="products")
 
-    discounts = relationship("Discount", back_populates="product")  # ✅ добавлено
+    # ✅ новая строка — связь с Discount
+    discounts = relationship("Discount", back_populates="product")
