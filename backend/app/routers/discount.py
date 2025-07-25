@@ -1,18 +1,50 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.db import get_db
-from app.schemas.discount import DiscountCreate, DiscountOut
-from app.crud.discount import create_discount, get_discounts
+from app import models, schemas
 
-router = APIRouter(
-    prefix="/discounts",
-    tags=["discounts"]
-)
+router = APIRouter(prefix="/discounts", tags=["Discounts"])
 
-@router.post("/", response_model=DiscountOut)
-def create_discount_view(discount: DiscountCreate, db: Session = Depends(get_db)):
-    return create_discount(db=db, discount=discount)
 
-@router.get("/", response_model=list[DiscountOut])
-def read_discounts(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    return get_discounts(db=db, skip=skip, limit=limit)
+@router.post("/", response_model=schemas.discount.DiscountOut)
+def create_discount(discount: schemas.discount.DiscountCreate, db: Session = Depends(get_db)):
+    db_discount = models.discount.Discount(**discount.model_dump())
+    db.add(db_discount)
+    db.commit()
+    db.refresh(db_discount)
+    return db_discount
+
+
+@router.get("/", response_model=list[schemas.discount.DiscountOut])
+def get_discounts(db: Session = Depends(get_db)):
+    return db.query(models.discount.Discount).all()
+
+
+@router.get("/{discount_id}", response_model=schemas.discount.DiscountOut)
+def get_discount(discount_id: int, db: Session = Depends(get_db)):
+    discount = db.query(models.discount.Discount).get(discount_id)
+    if not discount:
+        raise HTTPException(status_code=404, detail="Discount not found")
+    return discount
+
+
+@router.put("/{discount_id}", response_model=schemas.discount.DiscountOut)
+def update_discount(discount_id: int, updated: schemas.discount.DiscountCreate, db: Session = Depends(get_db)):
+    discount = db.query(models.discount.Discount).get(discount_id)
+    if not discount:
+        raise HTTPException(status_code=404, detail="Discount not found")
+    for key, value in updated.model_dump().items():
+        setattr(discount, key, value)
+    db.commit()
+    db.refresh(discount)
+    return discount
+
+
+@router.delete("/{discount_id}")
+def delete_discount(discount_id: int, db: Session = Depends(get_db)):
+    discount = db.query(models.discount.Discount).get(discount_id)
+    if not discount:
+        raise HTTPException(status_code=404, detail="Discount not found")
+    db.delete(discount)
+    db.commit()
+    return {"message": "Discount deleted"}
