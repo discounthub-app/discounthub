@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, Float, ForeignKey
 from sqlalchemy.orm import relationship
 from app.db import Base
+from app.models.product import Product  # 👈 вот эта строка
 
 class Discount(Base):
     __tablename__ = "discounts"
