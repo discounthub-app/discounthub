@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 from app.db import Base
 
@@ -6,8 +6,7 @@ class City(Base):
     __tablename__ = "cities"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, unique=True, nullable=False)
+    name = Column(String, nullable=False)
 
-    # связи на будущее
-    # stores = relationship("Store", back_populates="city")
-    # users = relationship("UserProfile", back_populates="city")
+    region_id = Column(Integer, ForeignKey("regions.id"))
+    region = relationship("Region", back_populates="cities")
