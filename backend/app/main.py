@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
+from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.db import SessionLocal
@@ -42,3 +44,8 @@ def get_users():
     db: Session = SessionLocal()
     users = db.execute(text("SELECT id, username, email FROM users")).mappings().all()
     return users
+
+# Переадресация /api на /redoc
+@app.get("/api", include_in_schema=False)
+def redirect_to_redoc():
+    return RedirectResponse(url="/redoc")
