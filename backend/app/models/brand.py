@@ -10,3 +10,4 @@ class Brand(Base):
 
     # связи на будущее
     # discounts = relationship("Discount", back_populates="brand")
+    products = relationship("Product", back_populates="brand")
