@@ -1,20 +1,21 @@
 from pydantic import BaseModel, ConfigDict
 from typing import Optional
+from datetime import datetime
 
 
 class FeedbackBase(BaseModel):
+    user_id: int
+    discount_id: int
+    text: str
     rating: int
-    comment: Optional[str] = None
 
 
 class FeedbackCreate(FeedbackBase):
-    user_id: int
-    discount_id: int
+    pass
 
 
 class FeedbackOut(FeedbackBase):
     id: int
-    user_id: int
-    discount_id: int
+    created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
