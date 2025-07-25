@@ -3,3 +3,4 @@ from .store import StoreCreate, StoreUpdate, StoreOut
 from .category import CategoryCreate, CategoryOut
 from .discount import DiscountCreate, DiscountOut
 from .user import UserCreate, UserOut
+from .city import CityCreate, CityOut
