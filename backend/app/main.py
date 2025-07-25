@@ -11,6 +11,7 @@ from app.routers.product import router as product_router
 from app.routers.category import router as category_router
 from app.routers.feedback import router as feedback_router  # ✅
 from app.routers.user_profile import router as profile_router
+from app.routers.banner import router as banner_router  # ✅
 
 app = FastAPI()
 
@@ -24,6 +25,7 @@ app.include_router(product_router)
 app.include_router(category_router)
 app.include_router(feedback_router)  # ✅
 app.include_router(profile_router)
+app.include_router(banner_router)  # ✅ Добавить эту строку
 
 @app.get("/ping")
 def ping():
