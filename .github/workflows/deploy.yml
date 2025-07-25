@@ -21,8 +21,7 @@ jobs:
       - name: 🚀 Run remote SSH commands
         run: |
           echo "🔧 Connecting to VPS and deploying DiscountHub"
-          ssh -o StrictHostKeyChecking=no ${{ secrets.USER }}@${{ secrets.HOST }} << 'EOF'
-            cd /app
+            ssh -o StrictHostKeyChecking=no "${{ secrets.USER }}@${{ secrets.HOST }}" << 'EOF'            cd /app
             git pull origin main
             docker compose down
             docker compose up -d --build
