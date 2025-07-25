@@ -13,3 +13,4 @@ class User(Base):
     # ✅ Связь с таблицей user_profiles
     profile = relationship("UserProfile", back_populates="user", uselist=False)
     feedbacks = relationship("Feedback", back_populates="user")
+    favorites = relationship("Favorite", back_populates="user", cascade="all, delete-orphan")
