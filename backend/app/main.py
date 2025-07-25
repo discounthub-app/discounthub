@@ -7,6 +7,7 @@ from app.routers.seller import router as seller_router
 from app.routers.user import router as user_router  # ✅ Роутер для пользователей
 from app.routers.store import router as store_router
 from app.routers.brand import router as brand_router  # ✅
+from app.routers.product import router as product_router  # ✅
 
 
 app = FastAPI()
@@ -17,6 +18,10 @@ app.include_router(seller_router)
 app.include_router(user_router)
 app.include_router(store_router)
 app.include_router(brand_router)  # ✅
+app.include_router(product_router)  # ✅
+app.include_router(category_router)
+
+
 
 
 # 🔧 Тестовый маршрут для проверки работы API
