@@ -20,7 +20,7 @@ from app.routers.tag import router as tag_router
 from app.routers.city import router as city_router
 from app.routers.region import router as region_router
 
-app = FastAPI(docs_url=None, redoc_url="/api")
+app = FastAPI(docs_url="/docs", redoc_url="/api")
 
 # Подключение роутеров
 app.include_router(discount_router)
