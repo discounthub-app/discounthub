@@ -11,9 +11,11 @@ from app.services.auth import (
     verify_password,
     create_access_token,
 )
+from app.dependencies.auth import get_current_user
 from app.db import get_db
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
+
 
 @router.post("/register", response_model=UserOut)
 def register(user_data: UserRegister, db: Session = Depends(get_db)):
@@ -41,3 +43,8 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 
     access_token = create_access_token(data={"sub": str(user.id)})
     return JSONResponse(content={"access_token": access_token, "token_type": "bearer"})
+
+
+@router.get("/me", response_model=UserOut)
+def get_me(current_user: User = Depends(get_current_user)):
+    return current_user
