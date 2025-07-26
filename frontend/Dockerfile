@@ -1,25 +1,24 @@
-# Этап 1: сборка Vite-приложения
+# ⚙️ Этап 1: билд через Vite
 FROM node:20 AS build
 
 WORKDIR /app
-
 COPY package*.json ./
 RUN npm install
-
 COPY . .
 RUN npm run build
 
-# Этап 2: NGINX для продакшн-сборки
-FROM nginx:alpine
+# 🚀 Этап 2: продакшн через nginx
+FROM nginx:alpine AS prod
 
-# Удаляем конфиг по умолчанию (по желанию)
 RUN rm -rf /etc/nginx/conf.d/default.conf
-
-# Копируем сборку
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# Открываем порт
-EXPOSE 80
+# 🧪 Этап 3: dev-сервер Vite (будет использоваться через override)
+FROM node:20 AS dev
 
-# Запускаем nginx
-CMD ["nginx", "-g", "daemon off;"]
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+
+CMD ["npm", "run", "dev"]
