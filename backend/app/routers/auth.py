@@ -37,12 +37,22 @@ def register(user_data: UserRegister, db: Session = Depends(get_db)):
 
 @router.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == form_data.username).first()
-    if not user or not verify_password(form_data.password, user.password_hash):
-        raise HTTPException(status_code=401, detail="Неверный email или пароль")
+    try:
+        user = db.query(User).filter(User.email == form_data.username).first()
 
-    access_token = create_access_token(data={"sub": str(user.id)})
-    return JSONResponse(content={"access_token": access_token, "token_type": "bearer"})
+        if not user:
+            raise HTTPException(status_code=401, detail="Пользователь не найден")
+
+        if not verify_password(form_data.password, user.password_hash):
+            raise HTTPException(status_code=401, detail="Неверный пароль")
+
+        access_token = create_access_token(data={"sub": str(user.id)})
+        return JSONResponse(content={"access_token": access_token, "token_type": "bearer"})
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()  # Выводим стек ошибки в логи контейнера
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/me", response_model=UserOut)
