@@ -4,6 +4,7 @@ services:
   backend:
     build:
       context: ./backend
+      dockerfile: Dockerfile
     container_name: app_backend
     ports:
       - "8000:8000"
@@ -30,9 +31,10 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
- frontend:
+  frontend:
     build:
       context: ./frontend
+      dockerfile: Dockerfile
     container_name: app_frontend
     ports:
       - "5173:5173"
@@ -40,7 +42,8 @@ services:
       - ./frontend:/app
     working_dir: /app
     command: npm run dev -- --host
-  
+    depends_on:
+      - backend
 
 volumes:
   pgdata:
