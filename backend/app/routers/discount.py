@@ -2,12 +2,18 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.db import get_db
 from app import models, schemas
+from app.dependencies.auth import get_current_user
+from app.models.user import User  # если не импортирован
 
 router = APIRouter(prefix="/discounts", tags=["Discounts"])
 
 
 @router.post("/", response_model=schemas.discount.DiscountOut)
-def create_discount(discount: schemas.discount.DiscountCreate, db: Session = Depends(get_db)):
+def create_discount(
+    discount: schemas.discount.DiscountCreate,
+    db: Session = Depends(get_db),
+    current_user: models.user.User = Depends(get_current_user)
+):
     db_discount = models.discount.Discount(**discount.model_dump())
     db.add(db_discount)
     db.commit()
