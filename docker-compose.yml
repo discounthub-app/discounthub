@@ -30,5 +30,14 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: app_frontend
+    ports:
+      - "3000:80"
+    restart: unless-stopped
+
 volumes:
   pgdata:
