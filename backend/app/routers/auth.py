@@ -1,10 +1,12 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
+from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.responses import JSONResponse
 
 from app.schemas.auth import UserRegister
 from app.schemas.user import UserOut
 from app.models.user import User
-from app.services.auth import hash_password
+from app.services.auth import hash_password, verify_password, create_access_token
 from app.db import get_db
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
@@ -26,3 +28,13 @@ def register(user_data: UserRegister, db: Session = Depends(get_db)):
     db.refresh(user)
 
     return user
+
+
+@router.post("/login")
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == form_data.username).first()
+    if not user or not verify_password(form_data.password, user.password_hash):
+        raise HTTPException(status_code=401, detail="Неверный email или пароль")
+
+    token = create_access_token({"sub": str(user.id)})
+    return JSONResponse(content={"access_token": token, "token_type": "bearer"})
