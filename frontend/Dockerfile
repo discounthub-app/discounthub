@@ -1,15 +1,12 @@
-# 1. Билдим приложение
-FROM node:20 AS builder
+# Этап 1: сборка
+FROM node:20 AS build
 WORKDIR /app
-
-COPY package*.json ./
-RUN npm install
-
 COPY . .
+RUN npm install
 RUN npm run build
 
-# 2. Сервер на nginx
+# Этап 2: продакшн-сервер
 FROM nginx:alpine
-COPY --from=builder /app/dist /usr/share/nginx/html
+COPY --from=build /app/dist /usr/share/nginx/html
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
