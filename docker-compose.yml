@@ -30,14 +30,17 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
-  frontend:
+ frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
     container_name: app_frontend
     ports:
-      - "3000:80"
-    restart: unless-stopped
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+    working_dir: /app
+    command: npm run dev -- --host
+  
 
 volumes:
   pgdata:
