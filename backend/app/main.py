@@ -1,3 +1,5 @@
+from fastapi.security import OAuth2PasswordBearer
+from fastapi.openapi.utils import get_openapi
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
@@ -20,6 +22,9 @@ from app.routers.tag import router as tag_router
 from app.routers.city import router as city_router
 from app.routers.region import router as region_router
 from app.routers import auth  # 📥 импорт нового роутера
+
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 app = FastAPI(docs_url="/docs", redoc_url="/api")
 
