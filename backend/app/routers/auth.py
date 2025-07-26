@@ -17,6 +17,7 @@ from app.db import get_db
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
+# 🔐 Регистрация нового пользователя
 @router.post("/register", response_model=UserOut)
 def register(user_data: UserRegister, db: Session = Depends(get_db)):
     existing_user = db.query(User).filter(User.email == user_data.email).first()
@@ -27,7 +28,7 @@ def register(user_data: UserRegister, db: Session = Depends(get_db)):
     user = User(
         username=user_data.username,
         email=user_data.email,
-        hashed_password=hashed_pwd,  # 👈 исправлено
+        hashed_password=hashed_pwd,  # ✅ правильное имя поля
     )
     db.add(user)
     db.commit()
@@ -35,15 +36,15 @@ def register(user_data: UserRegister, db: Session = Depends(get_db)):
     return user
 
 
+# 🔐 Авторизация и выдача JWT
 @router.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     try:
         user = db.query(User).filter(User.email == form_data.username).first()
-
         if not user:
             raise HTTPException(status_code=401, detail="Пользователь не найден")
 
-        if not verify_password(form_data.password, user.hashed_password):  # 👈 исправлено
+        if not verify_password(form_data.password, user.hashed_password):  # ✅ исправлено
             raise HTTPException(status_code=401, detail="Неверный пароль")
 
         access_token = create_access_token(data={"sub": str(user.id)})
@@ -51,10 +52,11 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 
     except Exception as e:
         import traceback
-        traceback.print_exc()
+        traceback.print_exc()  # для логов в контейнер
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
+# 🔐 Получение информации о текущем пользователе
 @router.get("/me", response_model=UserOut)
 def get_me(current_user: User = Depends(get_current_user)):
     return current_user
