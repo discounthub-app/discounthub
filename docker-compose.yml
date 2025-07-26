@@ -4,7 +4,7 @@ services:
   backend:
     build:
       context: ./backend
-      dockerfile: ./backend/Dockerfile
+      dockerfile: Dockerfile  # 👈 Dockerfile лежит в ./backend
     container_name: app_backend
     ports:
       - "8000:8000"
@@ -20,6 +20,15 @@ services:
     depends_on:
       - db
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile  # 👈 Dockerfile лежит в ./frontend
+    container_name: app_frontend
+    ports:
+      - "5173:80"
+    restart: unless-stopped
+
   db:
     image: postgres:14
     container_name: app_db
@@ -30,18 +39,6 @@ services:
       POSTGRES_PASSWORD: secret123
     volumes:
       - pgdata:/var/lib/postgresql/data
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: app_frontend
-    ports:
-      - "5173:5173"
-    volumes:
-      - ./frontend:/app
-    working_dir: /app
-    command: npm run dev -- --host
 
 volumes:
   pgdata:
