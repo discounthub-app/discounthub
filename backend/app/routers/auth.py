@@ -27,7 +27,7 @@ def register(user_data: UserRegister, db: Session = Depends(get_db)):
     user = User(
         username=user_data.username,
         email=user_data.email,
-        password_hash=hashed_pwd,
+        hashed_password=hashed_pwd,  # 👈 исправлено
     )
     db.add(user)
     db.commit()
@@ -43,7 +43,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         if not user:
             raise HTTPException(status_code=401, detail="Пользователь не найден")
 
-        if not verify_password(form_data.password, user.password_hash):
+        if not verify_password(form_data.password, user.hashed_password):  # 👈 исправлено
             raise HTTPException(status_code=401, detail="Неверный пароль")
 
         access_token = create_access_token(data={"sub": str(user.id)})
@@ -51,7 +51,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 
     except Exception as e:
         import traceback
-        traceback.print_exc()  # Выводим стек ошибки в логи контейнера
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
