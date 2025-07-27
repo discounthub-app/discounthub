@@ -1,15 +1,15 @@
 const API_URL = 'http://62.84.102.222:8000';
 
-export async function login(email, password) {
+export async function login(email: string, password: string) {
   const response = await fetch(`${API_URL}/auth/login`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/x-www-form-urlencoded',
     },
-    body: JSON.stringify({
-      email: email,
-      password: password
-    })
+    body: new URLSearchParams({
+      username: email,
+      password: password,
+    }),
   });
 
   if (!response.ok) {
@@ -19,11 +19,11 @@ export async function login(email, password) {
   return await response.json();
 }
 
-export async function getCurrentUser(token) {
+export async function getCurrentUser(token: string) {
   const response = await fetch(`${API_URL}/auth/me`, {
     headers: {
-      Authorization: `Bearer ${token}`
-    }
+      Authorization: `Bearer ${token}`,
+    },
   });
 
   if (!response.ok) {
