@@ -1,50 +1,36 @@
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import LoginForm from './components/LoginForm';
-import RegisterForm from './components/RegisterForm';
-import { getMe } from './api/auth';
+import React, { useEffect, useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
-const HomePage = ({ user, onLogout }) => (
-  <div>
-    <h1>DiscountHub</h1>
-    <p>Вы вошли как: <strong>{user.username}</strong></p>
-    <button onClick={onLogout}>Выйти</button>
-  </div>
-);
+import LoginPage from './pages/LoginPage';
+import HomePage from './pages/HomePage';
+import { getCurrentUser } from './api/auth';
 
-const App = () => {
-  const [token, setToken] = useState(localStorage.getItem('token') || '');
+function App() {
   const [user, setUser] = useState(null);
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    const fetchUser = async () => {
-      if (token) {
-        try {
-          const userData = await getMe(token);
-          setUser(userData);
-        } catch (err) {
-          console.error('Ошибка получения пользователя', err);
-          setToken('');
-          localStorage.removeItem('token');
-        }
-      }
-    };
-    fetchUser();
-  }, [token]);
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setChecking(false);
+      return;
+    }
 
-  const handleLogin = (newToken) => {
-    setToken(newToken);
-    localStorage.setItem('token', newToken);
-  };
+    getCurrentUser(token)
+      .then(setUser)
+      .catch(() => localStorage.removeItem('token'))
+      .finally(() => setChecking(false));
+  }, []);
 
   const handleLogout = () => {
-    setToken('');
-    setUser(null);
     localStorage.removeItem('token');
+    setUser(null);
   };
 
+  if (checking) return <p>Загрузка...</p>;
+
   return (
-    <Router>
+    <BrowserRouter>
       <Routes>
         <Route
           path="/"
@@ -52,18 +38,24 @@ const App = () => {
             user ? (
               <HomePage user={user} onLogout={handleLogout} />
             ) : (
-              <Navigate to="/login" replace />
+              <Navigate to="/login" />
             )
           }
         />
         <Route
           path="/login"
-          element={<LoginForm onLogin={handleLogin} />}
+          element={
+            user ? (
+              <Navigate to="/" />
+            ) : (
+              <LoginPage />
+            )
+          }
         />
-        <Route path="/register" element={<RegisterForm />} />
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
-    </Router>
+    </BrowserRouter>
   );
-};
+}
 
 export default App;
