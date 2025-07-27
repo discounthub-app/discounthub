@@ -24,4 +24,4 @@ RUN npm install --include=dev
 
 COPY . .
 
-CMD ["npx", "vite", "--host"]
+CMD ["npm", "exec", "--", "vite", "--host"]
