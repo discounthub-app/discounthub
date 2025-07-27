@@ -3,6 +3,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 from fastapi.openapi.utils import get_openapi
 from fastapi.security import OAuth2PasswordBearer
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 
@@ -30,6 +31,15 @@ app = FastAPI(
     title="DiscountHub API",
     description="API для авторизации и управления скидками",
     version="1.0.0"
+)
+
+# ✅ Добавляем CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Можно указать ["http://localhost:5173"] или конкретный IP
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Подключение роутеров
