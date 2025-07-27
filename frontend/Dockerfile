@@ -19,7 +19,7 @@ FROM node:20 AS dev
 WORKDIR /app
 COPY package*.json ./
 
-ENV NODE_ENV=development  # 👈 ОБЯЗАТЕЛЬНО
+ENV NODE_ENV=development
 
 RUN npm install
 
