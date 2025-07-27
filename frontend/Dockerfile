@@ -19,8 +19,9 @@ FROM node:20 AS dev
 WORKDIR /app
 COPY package*.json ./
 
-# Устанавливаем всё, включая devDependencies
-RUN npm install --include=dev
+ENV NODE_ENV=development
+RUN npm install --include=dev \
+ && npx vite --version
 
 COPY . .
 
