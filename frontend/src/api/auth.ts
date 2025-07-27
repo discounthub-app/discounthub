@@ -7,7 +7,7 @@ export async function login(email: string, password: string) {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      username: email,
+      username: email, // 👈 важно: ключ должен быть username
       password: password
     })
   });
