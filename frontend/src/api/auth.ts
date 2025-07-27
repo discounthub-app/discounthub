@@ -1,49 +1,31 @@
-const API_BASE = '/api';
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
-export async function login(email, password) {
-  const response = await fetch(`${API_BASE}/auth/login`, {
-    method: 'POST',
+export async function login(email: string, password: string) {
+  const response = await fetch(`${API_URL}/auth/token`, {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
+      "Content-Type": "application/x-www-form-urlencoded",
     },
-    body: new URLSearchParams({
-      username: email,
-      password: password,
-    }),
+    body: new URLSearchParams({ username: email, password }),
   });
 
   if (!response.ok) {
-    throw new Error('Ошибка входа');
+    throw new Error("Неверный email или пароль");
   }
 
-  return await response.json(); // { access_token, token_type }
+  return response.json();
 }
 
-export async function register({ email, username, password }) {
-  const response = await fetch(`${API_BASE}/auth/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, username, password }),
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.detail || 'Ошибка регистрации');
-  }
-
-  return await response.json(); // UserOut
-}
-
-export async function getCurrentUser(token) {
-  const response = await fetch(`${API_BASE}/auth/me`, {
+export async function getCurrentUser(token: string) {
+  const response = await fetch(`${API_URL}/auth/me`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   });
 
   if (!response.ok) {
-    throw new Error('Не удалось получить пользователя');
+    throw new Error("Не удалось получить данные пользователя");
   }
 
-  return await response.json(); // UserOut
+  return response.json();
 }
