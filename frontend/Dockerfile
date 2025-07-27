@@ -19,9 +19,10 @@ FROM node:20 AS dev
 WORKDIR /app
 COPY package*.json ./
 
-# Устанавливаем всё без хитростей
+ENV NODE_ENV=development  # 👈 ОБЯЗАТЕЛЬНО
+
 RUN npm install
 
 COPY . .
 
-CMD ["npx", "vite", "--host"]
+CMD ["npm", "run", "dev", "--", "--host"]
