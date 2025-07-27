@@ -10,27 +10,45 @@ function App() {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
+    console.log('🔄 useEffect запущен');
+
     const token = localStorage.getItem('token');
+    console.log('📦 token из localStorage:', token);
+
     if (!token) {
       setChecking(false);
       return;
     }
 
     getCurrentUser(token)
-      .then(setUser)
-      .catch(() => localStorage.removeItem('token'))
-      .finally(() => setChecking(false));
+      .then((data) => {
+        console.log('✅ Пользователь получен:', data);
+        setUser(data);
+      })
+      .catch((err) => {
+        console.error('❌ Ошибка getCurrentUser:', err);
+        localStorage.removeItem('token');
+      })
+      .finally(() => {
+        setChecking(false);
+      });
   }, []);
 
   const handleLogout = () => {
+    console.log('🚪 Выход');
     localStorage.removeItem('token');
     setUser(null);
   };
 
-  if (checking) return <p>Загрузка...</p>;
+  if (checking) {
+    console.log('⏳ Проверка токена...');
+    return <p>Загрузка...</p>;
+  }
+
+  console.log('🧠 user:', user);
 
   return (
-    <BrowserRouter>
+    <>
       <Routes>
         <Route
           path="/"
@@ -54,7 +72,7 @@ function App() {
         />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
-    </BrowserRouter>
+    </>
   );
 }
 
