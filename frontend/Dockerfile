@@ -19,10 +19,9 @@ FROM node:20 AS dev
 WORKDIR /app
 COPY package*.json ./
 
-ENV NODE_ENV=development
-RUN npm install --include=dev \
- && npx vite --version
+# Устанавливаем всё без хитростей
+RUN npm install
 
 COPY . .
 
-CMD ["./node_modules/.bin/vite", "--host"]
+CMD ["npx", "vite", "--host"]
