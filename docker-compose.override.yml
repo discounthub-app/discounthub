@@ -6,7 +6,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       target: dev
-    command: npm run dev -- --host
+    command: ./node_modules/.bin/vite --host
     ports:
       - "5173:5173"
     volumes:
