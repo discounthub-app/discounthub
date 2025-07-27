@@ -26,7 +26,7 @@ services:
       dockerfile: Dockerfile
     container_name: app_frontend
     ports:
-      - "127.0.0.1:5174:80"  # 👈 пробрасываем только на localhost
+       - "5173:5173"
     restart: unless-stopped
 
   db:
