@@ -48,7 +48,7 @@ function App() {
             user ? (
               <Navigate to="/" />
             ) : (
-              <LoginPage />
+              <LoginPage onLogin={setUser} />
             )
           }
         />
