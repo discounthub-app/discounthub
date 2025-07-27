@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login } from '../api/auth';
+import { login, getCurrentUser } from '../api/auth';
 
-function LoginPage() {
+function LoginPage({ onLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -15,6 +15,8 @@ function LoginPage() {
     try {
       const { access_token } = await login(email, password);
       localStorage.setItem('token', access_token);
+      const user = await getCurrentUser(access_token); // ✅ получить пользователя
+      onLogin(user); // ✅ обновить состояние в App
       navigate('/');
     } catch (err) {
       setError(err.message || 'Ошибка входа');
