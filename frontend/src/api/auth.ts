@@ -4,9 +4,12 @@ export async function login(email, password) {
   const response = await fetch(`${API_URL}/auth/login`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/x-www-form-urlencoded'
     },
-    body: JSON.stringify({ email, password })
+    body: new URLSearchParams({
+      username: email,
+      password: password
+    })
   });
 
   if (!response.ok) {
