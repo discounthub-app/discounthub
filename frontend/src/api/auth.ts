@@ -4,12 +4,12 @@ export async function login(email: string, password: string) {
   const response = await fetch(`${API_URL}/auth/login`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
+      'Content-Type': 'application/json'
     },
-    body: new URLSearchParams({
-      username: email,
-      password: password,
-    }),
+    body: JSON.stringify({
+      email,
+      password
+    })
   });
 
   if (!response.ok) {
@@ -22,8 +22,8 @@ export async function login(email: string, password: string) {
 export async function getCurrentUser(token: string) {
   const response = await fetch(`${API_URL}/auth/me`, {
     headers: {
-      Authorization: `Bearer ${token}`,
-    },
+      Authorization: `Bearer ${token}`
+    }
   });
 
   if (!response.ok) {
