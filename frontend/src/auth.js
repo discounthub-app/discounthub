@@ -1,49 +1,31 @@
-const API_BASE = '/api';
+const API_URL = 'http://62.84.102.222:8000';
 
 export async function login(email, password) {
-  const response = await fetch(`${API_BASE}/auth/login`, {
+  const response = await fetch(`${API_URL}/auth/login`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
+      'Content-Type': 'application/json'
     },
-    body: new URLSearchParams({
-      username: email,
-      password: password,
-    }),
+    body: JSON.stringify({ email, password })
   });
 
   if (!response.ok) {
     throw new Error('Ошибка входа');
   }
 
-  return await response.json(); // { access_token, token_type }
-}
-
-export async function register({ email, username, password }) {
-  const response = await fetch(`${API_BASE}/auth/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, username, password }),
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.detail || 'Ошибка регистрации');
-  }
-
-  return await response.json(); // UserOut
+  return await response.json();
 }
 
 export async function getCurrentUser(token) {
-  const response = await fetch(`${API_BASE}/auth/me`, {
+  const response = await fetch(`${API_URL}/auth/me`, {
     headers: {
-      Authorization: `Bearer ${token}`,
-    },
+      Authorization: `Bearer ${token}`
+    }
   });
 
   if (!response.ok) {
     throw new Error('Не удалось получить пользователя');
   }
 
-  return await response.json(); // UserOut
+  return await response.json();
 }
