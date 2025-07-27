@@ -19,10 +19,9 @@ FROM node:20 AS dev
 WORKDIR /app
 COPY package*.json ./
 
-# ⬇️ Здесь главное изменение — добавлен флаг NODE_ENV=development и vite явно
 ENV NODE_ENV=development
-RUN npm install && npx vite --version
+RUN npm install
 
 COPY . .
 
-CMD ["npm", "run", "dev", "--", "--host"]
+CMD ["npx", "vite", "--host"]
