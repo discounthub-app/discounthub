@@ -23,10 +23,10 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile  # 👈 Dockerfile лежит в ./frontend
+      dockerfile: Dockerfile
     container_name: app_frontend
     ports:
-      - "5173:80"
+      - "127.0.0.1:5173:80"  # 👈 пробрасываем только на localhost
     restart: unless-stopped
 
   db:
