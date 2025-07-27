@@ -64,6 +64,10 @@ def get_users():
 async def custom_swagger_ui_html():
     return get_swagger_ui_html(openapi_url="/openapi.json", title="DiscountHub API")
 
+@app.get("/api", include_in_schema=False)
+async def custom_redoc_html():
+    return get_redoc_html(openapi_url="/openapi.json", title="DiscountHub API – ReDoc")
+
 # 👉 Кастомная OpenAPI-схема с Bearer авторизацией
 def custom_openapi():
     if app.openapi_schema:
