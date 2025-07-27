@@ -25,4 +25,4 @@ RUN npm install --include=dev \
 
 COPY . .
 
-CMD ["npm", "run", "dev", "--", "--host"]
+CMD ["./node_modules/.bin/vite", "--host"]
