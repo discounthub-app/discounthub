@@ -3,7 +3,7 @@ FROM node:20 AS build
 
 WORKDIR /app
 COPY package*.json ./
-RUN npm install --include=dev
+RUN npm install
 COPY . .
 RUN npm run build
 
@@ -13,12 +13,16 @@ FROM nginx:alpine AS prod
 RUN rm -rf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# 🧪 Этап 3: dev-сервер Vite (будет использоваться через override)
+# 🧪 Этап 3: dev-сервер Vite (используется через override)
 FROM node:20 AS dev
 
 WORKDIR /app
 COPY package*.json ./
-RUN npm install --include=dev
+
+# ⬇️ Здесь главное изменение — добавлен флаг NODE_ENV=development и vite явно
+ENV NODE_ENV=development
+RUN npm install && npx vite --version
+
 COPY . .
 
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "dev", "--", "--host"]
