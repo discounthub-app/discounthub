@@ -51,7 +51,21 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={"detail": "Internal server error"}
     )
 
-# ✅ Добавляем CORS middleware
+# === СЧЁТЧИК ВСЕХ ЗАПРОСОВ (БАЗОВАЯ АНАЛИТИКА) ===
+request_counter = 0
+
+@app.middleware("http")
+async def count_requests(request: Request, call_next):
+    global request_counter
+    request_counter += 1
+    response = await call_next(request)
+    return response
+
+@app.get("/metrics", tags=["Monitoring"])
+def get_metrics():
+    return {"total_requests": request_counter}
+
+# === CORS middleware ===
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Можно указать ["http://localhost:5173"] или конкретный IP
@@ -60,7 +74,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Подключение роутеров
+# === Подключение роутеров ===
 app.include_router(discount_router)
 app.include_router(seller_router)
 app.include_router(user_router)
