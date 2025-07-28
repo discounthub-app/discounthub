@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from typing import Optional, List
 
@@ -8,7 +8,6 @@ from app.dependencies.auth import get_current_user
 from app.models.user import User
 
 router = APIRouter(prefix="/discounts", tags=["Discounts"])
-
 
 @router.post("/", response_model=schemas.discount.DiscountOut)
 def create_discount(
@@ -21,7 +20,6 @@ def create_discount(
     db.commit()
     db.refresh(db_discount)
     return db_discount
-
 
 @router.get("/", response_model=List[schemas.discount.DiscountOut])
 def get_discounts(
@@ -42,14 +40,12 @@ def get_discounts(
     discounts = q.offset(offset).limit(limit).all()
     return discounts
 
-
 @router.get("/{discount_id}", response_model=schemas.discount.DiscountOut)
 def get_discount(discount_id: int, db: Session = Depends(get_db)):
     discount = db.query(models.discount.Discount).get(discount_id)
     if not discount:
         raise HTTPException(status_code=404, detail="Discount not found")
     return discount
-
 
 @router.put("/{discount_id}", response_model=schemas.discount.DiscountOut)
 def update_discount(discount_id: int, updated: schemas.discount.DiscountCreate, db: Session = Depends(get_db)):
@@ -62,9 +58,14 @@ def update_discount(discount_id: int, updated: schemas.discount.DiscountCreate, 
     db.refresh(discount)
     return discount
 
-
 @router.delete("/{discount_id}")
-def delete_discount(discount_id: int, db: Session = Depends(get_db)):
+def delete_discount(
+    discount_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if not current_user.is_admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Только для админа")
     discount = db.query(models.discount.Discount).get(discount_id)
     if not discount:
         raise HTTPException(status_code=404, detail="Discount not found")
