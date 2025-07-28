@@ -19,3 +19,17 @@ export async function login(email: string, password: string) {
 
   return await response.json();
 }
+
+export async function getCurrentUser(token: string) {
+  const response = await fetch(`${API_URL}/auth/me`, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error('Не удалось получить пользователя');
+  }
+
+  return await response.json();
+}
