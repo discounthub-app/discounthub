@@ -30,6 +30,15 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      
+      - name: Create .env file for backend
+        run: |
+          cd backend
+          echo "postgres_db=discounthub" > .env
+          echo "postgres_user=discounthub_user" >> .env
+          echo "postgres_password=discounthub_password" >> .env
+          echo "postgres_host=postgres" >> .env
+          echo "postgres_port=5432" >> .env
 
       - name: Set up Python
         uses: actions/setup-python@v5
