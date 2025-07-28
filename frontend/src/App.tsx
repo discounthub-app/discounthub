@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 import LoginPage from './pages/LoginPage';
 import HomePage from './pages/HomePage';
+import DiscountsPage from './pages/DiscountsPage';
+import ProfilePage from './pages/ProfilePage';
 import { getCurrentUser } from './api/auth';
 
 function App() {
@@ -10,69 +12,70 @@ function App() {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    console.log('🔄 useEffect запущен');
-
     const token = localStorage.getItem('token');
-    console.log('📦 token из localStorage:', token);
-
     if (!token) {
       setChecking(false);
       return;
     }
-
     getCurrentUser(token)
-      .then((data) => {
-        console.log('✅ Пользователь получен:', data);
-        setUser(data);
-      })
-      .catch((err) => {
-        console.error('❌ Ошибка getCurrentUser:', err);
-        localStorage.removeItem('token');
-      })
-      .finally(() => {
-        setChecking(false);
-      });
+      .then((data) => setUser(data))
+      .catch(() => localStorage.removeItem('token'))
+      .finally(() => setChecking(false));
   }, []);
 
   const handleLogout = () => {
-    console.log('🚪 Выход');
     localStorage.removeItem('token');
     setUser(null);
   };
 
   if (checking) {
-    console.log('⏳ Проверка токена...');
     return <p>Загрузка...</p>;
   }
 
-  console.log('🧠 user:', user);
-
   return (
-    <>
-      <Routes>
-        <Route
-          path="/"
-          element={
-            user ? (
-              <HomePage user={user} onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/login" />
-            )
-          }
-        />
-        <Route
-          path="/login"
-          element={
-            user ? (
-              <Navigate to="/" />
-            ) : (
-              <LoginPage onLogin={setUser} />
-            )
-          }
-        />
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
-    </>
+    <Routes>
+      <Route
+        path="/"
+        element={
+          user ? (
+            <HomePage user={user} onLogout={handleLogout} />
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
+      <Route
+        path="/login"
+        element={
+          user ? (
+            <Navigate to="/" />
+          ) : (
+            <LoginPage onLogin={setUser} />
+          )
+        }
+      />
+      <Route
+        path="/discounts"
+        element={
+          user ? (
+            <DiscountsPage user={user} />
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          user ? (
+            <ProfilePage user={user} />
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
+      <Route path="*" element={<Navigate to="/" />} />
+    </Routes>
   );
 }
 
