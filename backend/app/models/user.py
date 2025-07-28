@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, Boolean
 from sqlalchemy.orm import relationship
 from app.db import Base
 
@@ -9,6 +9,7 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     username = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
+    is_admin = Column(Boolean, default=False)  # <--- добавили это поле
 
     profile = relationship("UserProfile", back_populates="user", uselist=False)
     feedbacks = relationship("Feedback", back_populates="user")
