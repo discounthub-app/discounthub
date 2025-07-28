@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 
 import LoginPage from './pages/LoginPage';
 import HomePage from './pages/HomePage';
 import DiscountsPage from './pages/DiscountsPage';
+import DiscountDetailPage from './pages/DiscountDetailPage'; // новый импорт!
 import ProfilePage from './pages/ProfilePage';
 import { getCurrentUser } from './api/auth';
 
@@ -59,6 +60,16 @@ function App() {
         element={
           user ? (
             <DiscountsPage user={user} />
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
+      <Route
+        path="/discounts/:id"
+        element={
+          user ? (
+            <DiscountDetailPage user={user} />
           ) : (
             <Navigate to="/login" />
           )
