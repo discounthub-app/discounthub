@@ -25,7 +25,6 @@ export default function DiscountDetailPage() {
       <p><b>Цена:</b> {discount.price} (было {discount.old_price})</p>
       <p><b>Категория:</b> {discount.category_id}</p>
       <p><b>Магазин:</b> {discount.store_id}</p>
-      {/* Можно добавить ещё детали, если есть */}
     </div>
   );
 }
