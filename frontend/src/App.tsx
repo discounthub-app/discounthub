@@ -4,8 +4,9 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import HomePage from './pages/HomePage';
 import DiscountsPage from './pages/DiscountsPage';
-import DiscountDetailPage from './pages/DiscountDetailPage'; // новый импорт!
+import DiscountDetailPage from './pages/DiscountDetailPage';
 import ProfilePage from './pages/ProfilePage';
+import AdminPage from './pages/AdminPage';         // <--- новый импорт!
 import { getCurrentUser } from './api/auth';
 
 function App() {
@@ -80,6 +81,16 @@ function App() {
         element={
           user ? (
             <ProfilePage user={user} />
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
+      <Route
+        path="/admin"
+        element={
+          user ? (
+            <AdminPage user={user} />
           ) : (
             <Navigate to="/login" />
           )
