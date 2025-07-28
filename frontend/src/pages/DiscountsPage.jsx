@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 export default function DiscountsPage() {
   const [discounts, setDiscounts] = useState([]);
@@ -7,7 +8,6 @@ export default function DiscountsPage() {
   const [categoryId, setCategoryId] = useState('');
   const [storeId, setStoreId] = useState('');
 
-  // Первичная загрузка всех скидок
   useEffect(() => {
     setLoading(true);
     fetch('http://62.84.102.222:8000/discounts/')
@@ -17,7 +17,6 @@ export default function DiscountsPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Функция для фильтрации
   const handleFilter = (e) => {
     e.preventDefault();
     setLoading(true);
@@ -67,7 +66,9 @@ export default function DiscountsPage() {
           {discounts.length === 0 && <li>Нет скидок</li>}
           {discounts.map(discount => (
             <li key={discount.id}>
-              <strong>{discount.title}</strong>
+              <Link to={`/discounts/${discount.id}`}>
+                <strong>{discount.title}</strong>
+              </Link>
               <span> — {discount.description}</span>
             </li>
           ))}
