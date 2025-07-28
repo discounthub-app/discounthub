@@ -1,5 +1,7 @@
-from fastapi import FastAPI
-from fastapi.responses import RedirectResponse
+import logging
+
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 from fastapi.openapi.utils import get_openapi
 from fastapi.security import OAuth2PasswordBearer
@@ -25,6 +27,13 @@ from app.routers.city import router as city_router
 from app.routers.region import router as region_router
 from app.routers import auth
 
+# === ЛОГИРОВАНИЕ ===
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s"
+)
+logger = logging.getLogger(__name__)
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 app = FastAPI(
@@ -32,6 +41,15 @@ app = FastAPI(
     description="API для авторизации и управления скидками",
     version="1.0.0"
 )
+
+# === ГЛОБАЛЬНЫЙ ОБРАБОТЧИК ОШИБОК ===
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Unhandled error: {exc}")
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"}
+    )
 
 # ✅ Добавляем CORS middleware
 app.add_middleware(
@@ -62,12 +80,14 @@ app.include_router(auth.router)
 
 @app.get("/ping")
 def ping():
+    logger.info("Ping endpoint requested")
     return {"message": "pong"}
 
 @app.get("/users/raw")
 def get_users():
     db: Session = SessionLocal()
     users = db.execute(text("SELECT id, username, email FROM users")).mappings().all()
+    logger.info(f"Requested raw users: {len(users)} found")
     return users
 
 @app.get("/docs", include_in_schema=False)
