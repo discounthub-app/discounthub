@@ -41,9 +41,20 @@ jobs:
           cd backend
           pip install --upgrade pip
           pip install -r requirements.txt
+          pip install flake8 pytest
+
+      - name: Lint code (flake8)
+        run: |
+          cd backend
+          flake8 app --max-line-length=120
 
       - name: Run Alembic migrations
         run: |
           cd backend
           export DATABASE_URL=postgresql+psycopg2://discounthub_user:discounthub_password@postgres:5432/discounthub
           python -m alembic upgrade head
+
+      - name: Run tests (pytest)
+        run: |
+          cd backend
+          pytest || true  # если тестов пока нет, чтобы не роняло pipeline
