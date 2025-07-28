@@ -86,16 +86,13 @@ function App() {
           )
         }
       />
-      <Route
-        path="/admin"
-        element={
-          user ? (
-            <AdminPage user={user} />
-          ) : (
-            <Navigate to="/login" />
-          )
-        }
-      />
+      {/* /admin — только для админа */}
+      {user?.is_admin && (
+        <Route
+          path="/admin"
+          element={<AdminPage user={user} />}
+        />
+      )}
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
