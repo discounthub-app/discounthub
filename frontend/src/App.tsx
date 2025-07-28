@@ -6,7 +6,7 @@ import HomePage from './pages/HomePage';
 import DiscountsPage from './pages/DiscountsPage';
 import DiscountDetailPage from './pages/DiscountDetailPage';
 import ProfilePage from './pages/ProfilePage';
-import AdminPage from './pages/AdminPage';         // <--- новый импорт!
+import AdminPage from './pages/AdminPage';
 import { getCurrentUser } from './api/auth';
 
 function App() {
