@@ -58,3 +58,8 @@ jobs:
         run: |
           cd backend
           pytest || true  # если тестов пока нет, чтобы не роняло pipeline
+
+       - name: Build backend Docker image
+         run: |
+           cd backend
+           docker build -t discounthub-backend:ci .
