@@ -7,6 +7,7 @@ import DiscountsPage from './pages/DiscountsPage';
 import DiscountDetailPage from './pages/DiscountDetailPage';
 import ProfilePage from './pages/ProfilePage';
 import AdminPage from './pages/AdminPage';
+import FavoritesPage from './pages/FavoritesPage'; // Новый импорт!
 import { getCurrentUser } from './api/auth';
 
 function App() {
@@ -81,6 +82,16 @@ function App() {
         element={
           user ? (
             <ProfilePage user={user} />
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
+      <Route
+        path="/favorites"
+        element={
+          user ? (
+            <FavoritesPage user={user} />
           ) : (
             <Navigate to="/login" />
           )
