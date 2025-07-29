@@ -1,14 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { getFavorites, addFavorite, removeFavorite } from '../api/favorite';
 
-export default function DiscountsPage() {
+export default function DiscountsPage({ user }) {
   const [discounts, setDiscounts] = useState([]);
+  const [favorites, setFavorites] = useState([]); // id-шники избранного
   const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [storeId, setStoreId] = useState('');
   const [onlyNearby, setOnlyNearby] = useState(false);
   const [coords, setCoords] = useState(null);
+
+  // Получение токена
+  const token = localStorage.getItem('token');
+
+  // Получить список избранного при загрузке
+  useEffect(() => {
+    if (token) {
+      getFavorites(token)
+        .then(favs => setFavorites(favs.map(f => f.discount_id)))
+        .catch(() => setFavorites([]));
+    }
+  }, [token]);
 
   // Запросить геолокацию пользователя при включении onlyNearby
   useEffect(() => {
@@ -51,6 +65,18 @@ export default function DiscountsPage() {
       .then(data => setDiscounts(data))
       .catch(() => setDiscounts([]))
       .finally(() => setLoading(false));
+  };
+
+  // Обработка избранного
+  const toggleFavorite = async (discountId) => {
+    if (!token) return;
+    if (favorites.includes(discountId)) {
+      await removeFavorite(token, discountId);
+      setFavorites(favorites.filter(id => id !== discountId));
+    } else {
+      await addFavorite(token, discountId);
+      setFavorites([...favorites, discountId]);
+    }
   };
 
   // Открыть Яндекс.Карты (пока без передачи меток)
@@ -109,12 +135,25 @@ export default function DiscountsPage() {
         <ul style={{ padding: 0, listStyle: 'none' }}>
           {discounts.length === 0 && <li>Нет скидок</li>}
           {discounts.map(discount => (
-            <li key={discount.id} style={{ border: '1px solid #eee', borderRadius: 10, padding: 12, marginBottom: 10 }}>
-              <Link to={`/discounts/${discount.id}`}>
+            <li key={discount.id} style={{ border: '1px solid #eee', borderRadius: 10, padding: 12, marginBottom: 10, display: 'flex', alignItems: 'center' }}>
+              <Link to={`/discounts/${discount.id}`} style={{ flex: 1 }}>
                 <strong>{discount.title}</strong>
               </Link>
-              <span> — {discount.description}</span>
-              {/* Кнопка избранного (будет позже) */}
+              {/* Звёздочка избранного */}
+              <button
+                onClick={() => toggleFavorite(discount.id)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: 22,
+                  color: favorites.includes(discount.id) ? '#f90' : '#bbb',
+                  cursor: 'pointer',
+                  marginLeft: 10
+                }}
+                aria-label="В избранное"
+              >
+                ★
+              </button>
             </li>
           ))}
         </ul>
