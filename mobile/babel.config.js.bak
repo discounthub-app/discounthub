@@ -1,0 +1,11 @@
+module.exports = function (api) {
+  api.cache(true);
+  return {
+    presets: ['babel-preset-expo'],
+    plugins: [
+      'expo-router/babel',
+      // временно убрали 'nativewind/babel'
+      // 'react-native-reanimated/plugin' // если не используете — оставьте закомментированным
+    ],
+  };
+};

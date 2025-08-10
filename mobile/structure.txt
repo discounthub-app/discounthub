@@ -1,0 +1,27 @@
+app
+├── (auth)
+│   └── login.tsx
+├── (tabs)
+│   ├── _layout.tsx
+│   ├── discount
+│   │   ├── [id].tsx
+│   │   ├── create.tsx
+│   │   ├── edit.tsx
+│   │   └── index.tsx
+│   ├── discounts.tsx
+│   ├── explore.tsx
+│   └── profile.tsx
+├── +not-found.tsx
+├── __old_profile.tsx
+├── _layout.tsx
+├── auth
+├── components
+│   ├── ParallaxScrollView.tsx
+│   └── ThemedText.tsx
+├── discounts
+│   ├── [id].tsx
+│   ├── edit.tsx
+│   └── index.tsx
+└── index.tsx
+
+7 directories, 18 files

@@ -1,0 +1,27 @@
+const base = require('./app.json');
+
+module.exports = () => {
+  const cfg = { ...base };
+
+  // 1) Отключаем SSR на вебе
+  cfg.web ||= {};
+  cfg.web.output = 'single';
+
+  // 2) Чистим plugins: оставляем expo-router без опций
+  const plugins = Array.isArray(cfg.plugins) ? [...cfg.plugins] : [];
+  const cleaned = plugins
+    .filter((p) => (Array.isArray(p) ? p[0] : p) !== 'expo-router')
+    .concat('expo-router');
+
+  // 3) Подключаем наш локальный плагин
+  cleaned.push('./plugins/fix-router-origin');
+  cfg.plugins = cleaned;
+
+  // 4) Убираем возможный след от extra.router из статического app.json —
+  //    его задаст наш локальный плагин
+  if (cfg.extra && cfg.extra.router) {
+    delete cfg.extra.router;
+  }
+
+  return cfg;
+};

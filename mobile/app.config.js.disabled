@@ -1,0 +1,21 @@
+const base = require('./app.json');
+
+module.exports = () => {
+  const cfg = { ...base };
+
+  // Нормализуем plugins: без опций для expo-router
+  if (Array.isArray(cfg.plugins)) {
+    cfg.plugins = cfg.plugins.map((p) =>
+      Array.isArray(p) && p[0] === 'expo-router' ? 'expo-router' : p
+    );
+  }
+
+  // Жёстко задаём корректный URL для CORS-проверки dev-сервера
+  cfg.extra ||= {};
+  cfg.extra.router = {
+    ...(cfg.extra.router || {}),
+    origin: 'http://localhost:8081',
+  };
+
+  return cfg;
+};
