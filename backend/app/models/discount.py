@@ -26,11 +26,10 @@ class Discount(Base):
     tags = relationship("DiscountTag", back_populates="discount")
     favorites = relationship("Favorite", back_populates="discount", cascade="all, delete-orphan")
 
-    # Геопозиция (для /discounts/nearby и геофильтров)
-    latitude = Column(Float, nullable=True)   # -90..+90
-    longitude = Column(Float, nullable=True)  # -180..+180
+    # Геопозиция
+    latitude  = Column(Float, nullable=True)   # -90..+90
+    longitude = Column(Float, nullable=True)   # -180..+180
 
-    # Индексы
     __table_args__ = (
         Index("ix_discounts_lat_lon", "latitude", "longitude"),
     )
