@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ru"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Вход — DiscountHub</title>
+<style>
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;margin:0;background:#fafafa;color:#111}
+main{max-width:420px;margin:40px auto;background:#fff;border:1px solid #eee;border-radius:16px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,.03)}
+h1{margin:0 0 14px 0;font-size:22px}
+label{display:block;margin:10px 0 6px 0}
+input{width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:10px}
+button{margin-top:14px;width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:10px;background:#fff;cursor:pointer}
+button:hover{background:#f6f6f6}
+.muted{color:#777;font-size:13px;margin-top:10px}
+.error{color:#b00020;margin-top:10px}
+.ok{color:#0a7d0a;margin-top:10px}
+.row{display:flex;gap:8px;align-items:center;margin-top:10px}
+a{color:#cc0000;text-decoration:none} a:hover{text-decoration:underline}
+</style>
+</head><body>
+<main>
+  <h1>Вход в DiscountHub</h1>
+  <form id="form">
+    <label>Логин (email/username)</label>
+    <input id="username" type="text" required />
+    <label>Пароль</label>
+    <input id="password" type="password" required />
+    <div class="row">
+      <input id="remember" type="checkbox" checked />
+      <label for="remember">Запомнить токен</label>
+    </div>
+    <button type="submit">Войти</button>
+  </form>
+  <div id="msg" class="muted">После входа токен сохранится в localStorage.token.</div>
+  <div class="row" style="justify-content:space-between;margin-top:14px">
+    <a href="./categories.html">← К категориям</a>
+    <button id="clear" type="button">Сбросить токен</button>
+  </div>
+</main>
+<script>
+const apiBase = `${location.protocol}//${location.hostname}:8000`;
+async function tryLogin(username, password){
+  const candidates = [`${apiBase}/auth/token`, `${apiBase}/login`, `${apiBase}/token`];
+  const form = new URLSearchParams(); form.set("username", username); form.set("password", password);
+  for (const url of candidates){
+    try{
+      const res = await fetch(url,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:form});
+      if (!res.ok) continue;
+      const data = await res.json().catch(()=> ({}));
+      const tok = data.access_token || data.token || data.jwt || '';
+      if (tok) return tok;
+    }catch(e){}
+  }
+  throw new Error('Не удалось получить токен: проверьте логин/пароль');
+}
+document.getElementById('form').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const u = document.getElementById('username').value.trim();
+  const p = document.getElementById('password').value;
+  const remember = document.getElementById('remember').checked;
+  const msg = document.getElementById('msg');
+  msg.className='muted'; msg.textContent='Вхожу…';
+  try{
+    const token = await tryLogin(u,p);
+    (remember?localStorage:sessionStorage).setItem('token', token);
+    msg.className='ok'; msg.textContent='Готово: токен сохранён. Открываю категории…';
+    setTimeout(()=>location.href='./categories.html',500);
+  }catch(err){
+    msg.className='error'; msg.textContent='Ошибка: '+(err&&err.message?err.message:err);
+  }
+});
+document.getElementById('clear').addEventListener('click', ()=>{
+  localStorage.removeItem('token'); sessionStorage.removeItem('token'); alert('Токен очищен.');
+});
+</script>
+<a href="/discount-create.html" style="position:fixed;top:56px;right:8px;z-index:99999;background:#fff;border:1px solid #eee;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.06);padding:8px 12px;text-decoration:none;color:#111">+ Скидка</a>
+<script src="categories-link.js"></script>
+<script src="enhance-discount-create.js"></script>
+</body></html>

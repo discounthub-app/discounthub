@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Создание скидки — DiscountHub</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;margin:0;background:#fafafa;color:#111}
+    main{max-width:900px;margin:0 auto;padding:16px}
+    h1{margin:12px 0 16px 0}
+    label{display:block;margin:12px 0 6px}
+    input,textarea,select{width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:10px}
+    textarea{min-height:120px}
+    button{margin-top:16px;width:100%;padding:12px;border:1px solid #1abc54;background:#1abc54;color:#fff;border-radius:12px;font-weight:700;cursor:pointer}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .muted{color:#777}
+    .ok{color:#0a7d0a}
+    .err{color:#b00020}
+    a{color:#cc0000;text-decoration:none}
+    a:hover{text-decoration:underline}
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Добавить скидку</h1>
+
+    <div class="muted" style="margin-bottom:8px">Токен берётся из <code>localStorage.token</code>. Если 401 — залогиньтесь на /login.</div>
+
+    <label>Название</label>
+    <input id="name" placeholder="Название" />
+
+    <label>Описание</label>
+    <textarea id="description" placeholder="Описание"></textarea>
+
+    <div class="row">
+      <div>
+        <label>Цена (price)</label>
+        <input id="price" type="number" step="0.01" placeholder="0.00" />
+      </div>
+      <div>
+        <label>Старая цена (old_price)</label>
+        <input id="old_price" type="number" step="0.01" placeholder="0.00" />
+      </div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label>seller_id</label>
+        <input id="seller_id" type="number" placeholder="1" />
+      </div>
+      <div>
+        <label>Категория</label>
+        <select id="category_id"><option value="">Загрузка…</option></select>
+      </div>
+    </div>
+
+    <button id="save">Сохранить</button>
+    <div id="msg" class="muted" style="margin-top:10px"></div>
+
+    <div style="margin-top:16px"><a href="/categories.html">← Категории</a></div>
+  </main>
+
+  <script>
+    const api = `${location.protocol}//${location.hostname}:8000`;
+    const token = () => localStorage.getItem('token') || sessionStorage.getItem('token') || '';
+
+    async function loadCategories(){
+      const res = await fetch(`${api}/categories/`, { headers: token() ? {Authorization:`Bearer ${token()}`} : {} });
+      if(!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+      return res.json();
+    }
+
+    async function saveDiscount(payload){
+      const res = await fetch(`${api}/discounts/`, {
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          ...(token()? {Authorization:`Bearer ${token()}`} : {})
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json().catch(()=> ({}));
+      if(!res.ok) throw new Error((data && (data.detail || data.message)) || `${res.status} ${res.statusText}`);
+      return data;
+    }
+
+    async function boot(){
+      const sel = document.getElementById('category_id');
+      const msg = document.getElementById('msg');
+
+      try{
+        const cats = await loadCategories();
+        sel.innerHTML = '<option value="">— выберите категорию —</option>' + cats.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+      }catch(e){
+        sel.innerHTML = '<option value="">Не удалось загрузить</option>';
+      }
+
+      document.getElementById('save').addEventListener('click', async ()=>{
+        msg.className = 'muted';
+        msg.textContent = 'Сохраняю…';
+
+        const payload = {
+          name: document.getElementById('name').value.trim(),
+          description: document.getElementById('description').value.trim(),
+          price: Number(document.getElementById('price').value || 0),
+          old_price: Number(document.getElementById('old_price').value || 0),
+          seller_id: Number(document.getElementById('seller_id').value || 0),
+          category_id: Number(document.getElementById('category_id').value || 0)
+        };
+
+        try{
+          if(!payload.name) throw new Error('Введите название');
+          if(!payload.category_id) throw new Error('Выберите категорию');
+          const res = await saveDiscount(payload);
+          msg.className = 'ok';
+          msg.textContent = 'Готово. ID: ' + (res && (res.id || res.pk || '—'));
+        }catch(err){
+          msg.className = 'err';
+          msg.textContent = 'Ошибка: ' + (err && err.message ? err.message : err);
+        }
+      });
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
+  </script>
+</body>
+</html>

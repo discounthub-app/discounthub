@@ -1,0 +1,54 @@
+backend/app
+├── api
+├── config.py
+├── crud
+│   ├── category.py
+│   ├── discount.py
+│   ├── seller.py
+│   └── user.py
+├── db.py
+├── main.py
+├── models
+│   ├── banner.py
+│   ├── brand.py
+│   ├── category.py
+│   ├── city.py
+│   ├── city_region.py
+│   ├── discount.py
+│   ├── discount.py.save
+│   ├── discount_tag.py
+│   ├── favorite.py
+│   ├── feedback.py
+│   ├── notification.py
+│   ├── product.py
+│   ├── region.py
+│   ├── seller.py
+│   ├── store.py
+│   ├── tag.py
+│   ├── user_profile.py
+│   └── user.py
+├── models.py
+├── routers
+│   ├── brand.py
+│   ├── category.py
+│   ├── discount.py
+│   ├── feedback.py
+│   ├── product.py
+│   ├── seller.py
+│   ├── store.py
+│   └── user.py
+├── schemas
+│   ├── brand.py
+│   ├── category.py
+│   ├── discount.py
+│   ├── favorite.py
+│   ├── feedback.py
+│   ├── notification.py
+│   ├── product.py
+│   ├── seller.py
+│   ├── store.py
+│   ├── user_profile.py
+│   └── user.py
+└── seed.py
+
+5 directories, 46 files
