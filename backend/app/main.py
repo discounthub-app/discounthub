@@ -1,7 +1,7 @@
 import logging
 
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import JSONResponse
 from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 from fastapi.openapi.utils import get_openapi
 from fastapi.security import OAuth2PasswordBearer
@@ -10,6 +10,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 
 from app.db import SessionLocal
+
+# роутеры существующие
 from app.routers.discount import router as discount_router
 from app.routers.seller import router as seller_router
 from app.routers.user import router as user_router
@@ -26,6 +28,9 @@ from app.routers.tag import router as tag_router
 from app.routers.city import router as city_router
 from app.routers.region import router as region_router
 from app.routers import auth
+
+# NEW: роутер DealPackage
+from app.routers.deal_packages import router as deal_packages_router  # NEW
 
 # === ЛОГИРОВАНИЕ ===
 logging.basicConfig(
@@ -91,6 +96,9 @@ app.include_router(tag_router)
 app.include_router(region_router)
 app.include_router(city_router)
 app.include_router(auth.router)
+
+# NEW: Deal Packages
+app.include_router(deal_packages_router)  # NEW
 
 @app.get("/ping")
 def ping():
