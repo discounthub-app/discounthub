@@ -1,18 +1,12 @@
 name: CI
 
 on:
-  push:
-    branches: [ main, develop ]
   pull_request:
-    branches: [ main, develop ]
-  workflow_dispatch: {}   # ➜ появится кнопка “Run workflow”
-
-permissions:
-  contents: read
-
-concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+    branches: [ "main", "develop" ]
+  push:
+    branches: [ "develop" ]
+  # ручной запуск из вкладки Actions
+  workflow_dispatch:
 
 jobs:
   backend:
@@ -26,27 +20,23 @@ jobs:
           POSTGRES_DB: discounthub
           POSTGRES_USER: discounthub_user
           POSTGRES_PASSWORD: secret123
-        ports:
-          - 5432:5432
+        ports: [ "5432:5432" ]
         options: >-
           --health-cmd="pg_isready -U discounthub_user -d discounthub"
-          --health-interval=5s --health-timeout=5s --health-retries=30
+          --health-interval=5s --health-timeout=5s --health-retries=20
 
-    # Все команды исполняем из каталога backend/
+    # все команды ниже выполняем из каталога backend/
     defaults:
       run:
         working-directory: backend
 
     env:
-      # Эти переменные подхватывает ваш Settings() / app.db
       POSTGRES_DB: discounthub
       POSTGRES_USER: discounthub_user
       POSTGRES_PASSWORD: secret123
       POSTGRES_HOST: localhost
       POSTGRES_PORT: "5432"
-      # Alembic использует этот конфиг
-      ALEMBIC_CONFIG: backend/alembic.ini
-      # Чтобы импорты вида "from app...." работали
+      # чтобы импорты вида "from app..." работали в тестах
       PYTHONPATH: ${{ github.workspace }}/backend
 
     steps:
@@ -75,18 +65,18 @@ jobs:
             sleep 1
           done
 
+      # ВАЖНО: даём конфиг ключом -c, иначе "script_location" не находится
       - name: Alembic upgrade
-        run: alembic upgrade head
+        run: alembic -c backend/alembic.ini upgrade head
 
       - name: Tests (cov ≥70%)
-        run: pytest -q --maxfail=1 --disable-warnings \
-             --cov=app --cov-report=term-missing --cov-fail-under=70
+        run: pytest -q --maxfail=1 --disable-warnings --cov=app --cov-report=term-missing --cov-fail-under=70
 
   frontend:
     name: Frontend CI
     runs-on: ubuntu-latest
 
-    # Все команды исполняем из каталога frontend/
+    # запускаем команды из каталога frontend/
     defaults:
       run:
         working-directory: frontend
@@ -99,7 +89,7 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
-          # ВНИМАНИЕ: путь для кэша — ОТ КОРНЯ РЕПО
+          # путь ДОЛЖЕН быть от корня репозитория!
           cache-dependency-path: 'frontend/package-lock.json'
 
       - name: Install deps
