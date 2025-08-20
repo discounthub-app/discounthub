@@ -2,13 +2,15 @@ name: CI
 
 on:
   pull_request:
-    branches: [ "develop", "main" ]
+    branches: [ "main", "develop" ]
   push:
     branches: [ "develop" ]
 
 jobs:
   backend:
+    name: Backend CI
     runs-on: ubuntu-latest
+
     services:
       postgres:
         image: postgres:14
@@ -20,18 +22,36 @@ jobs:
         options: >-
           --health-cmd="pg_isready -U discounthub_user -d discounthub"
           --health-interval=5s --health-timeout=5s --health-retries=20
+
+    # ВАЖНО: все команды по умолчанию из каталога backend
+    defaults:
+      run:
+        working-directory: backend
+
     env:
-      DATABASE_URL: postgresql+psycopg2://discounthub_user:secret123@localhost:5432/discounthub
-      PYTHONWARNINGS: ignore
+      # то, что ждут ваши settings (pydantic)
+      POSTGRES_DB: discounthub
+      POSTGRES_USER: discounthub_user
+      POSTGRES_PASSWORD: secret123
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: "5432"
+      # alembic
+      ALEMBIC_CONFIG: backend/alembic.ini
+      # чтобы python видел пакет app из backend/
+      PYTHONPATH: ${{ github.workspace }}/backend
+
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install system deps
-        run: sudo apt-get update && sudo apt-get install -y build-essential libpq-dev
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libpq-dev
 
       - name: Install Python deps
         run: |
@@ -42,36 +62,45 @@ jobs:
       - name: Wait for Postgres
         run: |
           for i in {1..60}; do
-            pg_isready -h localhost -p 5432 -U discounthub_user && break
+            pg_isready -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER && break
             sleep 1
           done
 
       - name: Run Alembic migrations
-        env:
-          ALEMBIC_CONFIG: alembic.ini
         run: alembic upgrade head
 
       - name: Pytest (cov ≥70%)
         env:
-          PYTHONPATH: ${{ github.workspace }}
+          # иногда удобно продублировать PYTHONPATH и тут
+          PYTHONPATH: ${{ github.workspace }}/backend
         run: pytest -q --maxfail=1 --disable-warnings --cov=app --cov-report=term-missing --cov-fail-under=70
 
   frontend:
+    name: Frontend CI
     runs-on: ubuntu-latest
+
     defaults:
       run:
         working-directory: frontend
+
     steps:
       - uses: actions/checkout@v4
+
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: 'frontend/package-lock.json'
+          node-version: "18"
+          cache: "npm"
+          # 🔧 УБРАЛИ cache-dependency-path, т.к. в ветке может не быть package-lock.json
+          # cache-dependency-path: frontend/package-lock.json
 
       - name: Install deps
-        run: npm ci
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
 
       - name: Build
         run: npm run build
