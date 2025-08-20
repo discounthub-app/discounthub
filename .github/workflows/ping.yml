@@ -1,0 +1,13 @@
+name: Ping
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, develop ]
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Say hello
+        run: echo "Ping from GitHub Actions ✅"
