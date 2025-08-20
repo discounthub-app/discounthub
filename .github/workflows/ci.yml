@@ -2,17 +2,15 @@ name: CI
 
 on:
   pull_request:
-    branches: [ "main", "develop" ]
+    branches: [main, develop]
   push:
-    branches: [ "develop" ]
-  # ручной запуск из вкладки Actions
-  workflow_dispatch:
+    branches: [develop]
+  workflow_dispatch: {}
 
 jobs:
   backend:
     name: Backend CI
     runs-on: ubuntu-latest
-
     services:
       postgres:
         image: postgres:14
@@ -20,80 +18,55 @@ jobs:
           POSTGRES_DB: discounthub
           POSTGRES_USER: discounthub_user
           POSTGRES_PASSWORD: secret123
-        ports: [ "5432:5432" ]
+        ports: ["5432:5432"]
         options: >-
           --health-cmd="pg_isready -U discounthub_user -d discounthub"
           --health-interval=5s --health-timeout=5s --health-retries=20
-
-    # все команды ниже выполняем из каталога backend/
     defaults:
       run:
         working-directory: backend
-
     env:
       POSTGRES_DB: discounthub
       POSTGRES_USER: discounthub_user
       POSTGRES_PASSWORD: secret123
       POSTGRES_HOST: localhost
       POSTGRES_PORT: "5432"
-      # чтобы импорты вида "from app..." работали в тестах
+      ALEMBIC_CONFIG: alembic.ini
       PYTHONPATH: ${{ github.workspace }}/backend
-
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
       - name: Install system deps
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential libpq-dev
-
       - name: Install Python deps
         run: |
           python -m pip install -U pip
           pip install -r requirements.txt
           pip install pytest pytest-cov alembic
-
       - name: Wait for Postgres
         run: |
-          for i in {1..60}; do
-            pg_isready -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" && break
-            sleep 1
-          done
-
-      # ВАЖНО: даём конфиг ключом -c, иначе "script_location" не находится
+          for i in {1..60}; do pg_isready -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" && break; sleep 1; done
       - name: Alembic upgrade
-        run: alembic -c backend/alembic.ini upgrade head
-
+        run: alembic -c "$ALEMBIC_CONFIG" upgrade head
       - name: Tests (cov ≥70%)
         run: pytest -q --maxfail=1 --disable-warnings --cov=app --cov-report=term-missing --cov-fail-under=70
 
   frontend:
     name: Frontend CI
     runs-on: ubuntu-latest
-
-    # запускаем команды из каталога frontend/
     defaults:
       run:
         working-directory: frontend
-
     steps:
       - uses: actions/checkout@v4
-
-      - name: Use Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
-          # путь ДОЛЖЕН быть от корня репозитория!
-          cache-dependency-path: 'frontend/package-lock.json'
-
+          node-version: "18"
+          cache: ""   # кеш отключён — чтоб не падал на путях
       - name: Install deps
         run: npm ci
-
       - name: Build
         run: npm run build
