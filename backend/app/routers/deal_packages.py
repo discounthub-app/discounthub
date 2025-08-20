@@ -10,7 +10,7 @@ from app.crud import deal_package as crud_deal_package
 
 # ⚠️ ВАЖНО: путь импорта get_db должен совпадать с вашим проектом.
 # Если у вас иначе, замените на актуальный (например, from app.db.session import get_db).
-from backend.app.db.session import get_db
+from app.db import get_db
 
 router = APIRouter(prefix="/deal-packages", tags=["deal-packages"])
 
