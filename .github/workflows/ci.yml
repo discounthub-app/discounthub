@@ -1,24 +1,16 @@
 name: CI
 
 on:
+  workflow_dispatch:
   push:
     branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
-  workflow_dispatch: {}   # кнопка “Run workflow”
-
-permissions:
-  contents: read
-
-concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
   backend:
     name: Backend CI
     runs-on: ubuntu-latest
-
     services:
       postgres:
         image: postgres:14
@@ -42,7 +34,6 @@ jobs:
       POSTGRES_PASSWORD: secret123
       POSTGRES_HOST: localhost
       POSTGRES_PORT: "5432"
-      ALEMBIC_CONFIG: backend/alembic.ini
       PYTHONPATH: ${{ github.workspace }}/backend
 
     steps:
@@ -51,7 +42,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install system deps
         run: |
@@ -72,11 +63,11 @@ jobs:
           done
 
       - name: Alembic upgrade
+        working-directory: backend
         run: alembic -c backend/alembic.ini upgrade head
 
       - name: Tests (cov ≥70%)
-        run: pytest -q --maxfail=1 --disable-warnings \
-             --cov=app --cov-report=term-missing --cov-fail-under=70
+        run: pytest -q --maxfail=1 --disable-warnings --cov=app --cov-report=term-missing --cov-fail-under=70
 
   frontend:
     name: Frontend CI
@@ -92,9 +83,9 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: 'frontend/package-lock.json'
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: "frontend/package-lock.json"
 
       - name: Install deps
         run: npm ci
