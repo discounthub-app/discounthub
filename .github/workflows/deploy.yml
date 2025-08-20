@@ -3,8 +3,8 @@ name: Deploy to VPS
 on:
   push:
     branches:
-      - main
-  workflow_dispatch:  # 👈 позволяет вручную запускать
+      - main          # деплой при пуше в main
+  workflow_dispatch:   # ручной запуск из вкладки Actions
 
 jobs:
   deploy:
@@ -14,33 +14,45 @@ jobs:
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
 
-      - name: 🧪 Create .env for Alembic
-        run: |
-          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
-          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
-          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
-          echo "POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}" >> .env
-          echo "POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}" >> .env
-
-      - name: 🔐 Add SSH key
+      - name: 🔐 Add SSH key (for server access)
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
 
-      - name: 🚀 Run remote SSH commands
+      - name: 🚀 Deploy to VPS
+        # Эти секреты будут подставлены в heredoc ниже
+        env:
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+          POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
         run: |
-          echo "🔧 Connecting to VPS and deploying DiscountHub"
-          ssh -o StrictHostKeyChecking=no "${{ secrets.USER }}@${{ secrets.HOST }}" << 'EOF'
+          echo "🔧 Connecting to VPS and deploying DiscountHub…"
+          ssh -o StrictHostKeyChecking=no "${{ secrets.USER }}@${{ secrets.HOST }}" << EOF
+            set -e
             cd /app
-            git pull origin main
 
-            echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" > .env
-            echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
-            echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
-            echo "POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}" >> .env
-            echo "POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}" >> .env
+            echo "📥 Pulling latest code (main)…"
+            git fetch origin main
+            git checkout main
+            git pull --ff-only origin main
 
+            echo "⚙️  Writing .env…"
+            cat > .env <<EENV
+POSTGRES_DB=$POSTGRES_DB
+POSTGRES_USER=$POSTGRES_USER
+POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+POSTGRES_HOST=$POSTGRES_HOST
+POSTGRES_PORT=$POSTGRES_PORT
+EENV
+
+            echo "🐳 Rebuild & restart containers…"
             docker compose down
             docker compose up -d --build
-            docker exec app_backend alembic upgrade head
+
+            echo "📜 Run Alembic migrations…"
+            docker compose exec -T app_backend bash -lc 'ALEMBIC_CONFIG=/app/backend/alembic.ini alembic upgrade head'
+
+            echo "✅ Deploy finished!"
           EOF
