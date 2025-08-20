@@ -2,13 +2,10 @@ name: CI
 
 on:
   push:
-    branches:
-      - '**'              # запускать CI на любой пуш (в т.ч. в PR-ветки)
+    branches: [ main, develop ]
   pull_request:
-    branches:
-      - main
-      - develop
-  workflow_dispatch: {}    # кнопка "Run workflow" в Actions
+    branches: [ main, develop ]
+  workflow_dispatch: {}
 
 permissions:
   contents: read
@@ -30,24 +27,22 @@ jobs:
           POSTGRES_USER: discounthub_user
           POSTGRES_PASSWORD: secret123
         ports:
-          - "5432:5432"
+          - 5432:5432
         options: >-
           --health-cmd="pg_isready -U discounthub_user -d discounthub"
           --health-interval=5s --health-timeout=5s --health-retries=30
 
-    # все команды исполняем из каталога backend/
+    # Все команды исполняем из backend/
     defaults:
       run:
         working-directory: backend
 
     env:
-      # переменные для Settings()/app.db
       POSTGRES_DB: discounthub
       POSTGRES_USER: discounthub_user
       POSTGRES_PASSWORD: secret123
       POSTGRES_HOST: localhost
       POSTGRES_PORT: "5432"
-      # чтобы импорты "from app...." работали
       PYTHONPATH: ${{ github.workspace }}/backend
 
     steps:
@@ -56,7 +51,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: '3.11'
 
       - name: Install system deps
         run: |
@@ -77,7 +72,7 @@ jobs:
           done
 
       - name: Alembic upgrade
-        run: alembic -c backend/alembic.ini upgrade head   # указываем конфиг явно
+        run: alembic -c alembic.ini upgrade head
 
       - name: Tests (cov ≥70%)
         run: pytest -q --maxfail=1 --disable-warnings --cov=app --cov-report=term-missing --cov-fail-under=70
@@ -86,7 +81,7 @@ jobs:
     name: Frontend CI
     runs-on: ubuntu-latest
 
-    # все команды исполняем из каталога frontend/
+    # Все команды исполняем из frontend/
     defaults:
       run:
         working-directory: frontend
@@ -97,10 +92,8 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
-          cache: "npm"
-          # путь задаётся ОТ КОРНЯ репозитория:
-          cache-dependency-path: "frontend/package-lock.json"
+          node-version: '18'
+          # временно БЕЗ cache, чтобы не падало
 
       - name: Install deps
         run: npm ci
