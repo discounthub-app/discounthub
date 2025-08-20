@@ -23,21 +23,20 @@ jobs:
           --health-cmd="pg_isready -U discounthub_user -d discounthub"
           --health-interval=5s --health-timeout=5s --health-retries=20
 
-    # ВАЖНО: все команды по умолчанию из каталога backend
+    # все шаги выполняем из каталога backend/
     defaults:
       run:
         working-directory: backend
 
     env:
-      # то, что ждут ваши settings (pydantic)
+      # Эти переменные подхватит ваш Settings (поля postgres_db и т.п.)
       POSTGRES_DB: discounthub
       POSTGRES_USER: discounthub_user
       POSTGRES_PASSWORD: secret123
       POSTGRES_HOST: localhost
       POSTGRES_PORT: "5432"
-      # alembic
+      # Alembic и Python импорты
       ALEMBIC_CONFIG: backend/alembic.ini
-      # чтобы python видел пакет app из backend/
       PYTHONPATH: ${{ github.workspace }}/backend
 
     steps:
@@ -46,7 +45,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: '3.11'
 
       - name: Install system deps
         run: |
@@ -62,23 +61,21 @@ jobs:
       - name: Wait for Postgres
         run: |
           for i in {1..60}; do
-            pg_isready -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER && break
+            pg_isready -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" && break
             sleep 1
           done
 
-      - name: Run Alembic migrations
+      - name: Alembic upgrade
         run: alembic upgrade head
 
-      - name: Pytest (cov ≥70%)
-        env:
-          # иногда удобно продублировать PYTHONPATH и тут
-          PYTHONPATH: ${{ github.workspace }}/backend
+      - name: Tests (cov ≥70%)
         run: pytest -q --maxfail=1 --disable-warnings --cov=app --cov-report=term-missing --cov-fail-under=70
 
   frontend:
     name: Frontend CI
     runs-on: ubuntu-latest
 
+    # все шаги выполняем из каталога frontend/
     defaults:
       run:
         working-directory: frontend
@@ -89,18 +86,13 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
-          cache: "npm"
-          # 🔧 УБРАЛИ cache-dependency-path, т.к. в ветке может не быть package-lock.json
-          # cache-dependency-path: frontend/package-lock.json
+          node-version: '18'
+          cache: 'npm'
+          # т.к. working-directory уже frontend, указываем локальный путь:
+          cache-dependency-path: 'package-lock.json'
 
       - name: Install deps
-        run: |
-          if [ -f package-lock.json ]; then
-            npm ci
-          else
-            npm install
-          fi
+        run: npm ci
 
       - name: Build
         run: npm run build
