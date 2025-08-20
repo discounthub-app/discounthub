@@ -2,10 +2,10 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, ci/reset ]
   pull_request:
     branches: [ main, develop ]
-  workflow_dispatch: {}   # возможность ручного запуска
+  workflow_dispatch: {}
 
 permissions:
   contents: read
@@ -42,7 +42,6 @@ jobs:
       POSTGRES_PASSWORD: secret123
       POSTGRES_HOST: localhost
       POSTGRES_PORT: "5432"
-      # Alembic конфиг
       ALEMBIC_CONFIG: backend/alembic.ini
       PYTHONPATH: ${{ github.workspace }}/backend
 
@@ -52,7 +51,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install system deps
         run: |
@@ -63,7 +62,7 @@ jobs:
         run: |
           python -m pip install -U pip
           pip install -r requirements.txt
-          pip install pytest pytest-cov alembic
+          pip install alembic
 
       - name: Wait for Postgres
         run: |
@@ -73,15 +72,15 @@ jobs:
           done
 
       - name: Alembic upgrade
-        run: alembic -c alembic.ini upgrade head
+        run: alembic -c backend/alembic.ini upgrade head
 
-
+      # ===== ТЕСТЫ: ставим pytest/pytest-cov и запускаем,
+      # если есть хоть один файл в backend/tests/**/*.py
       - name: Tests (skip if none)
         if: ${{ hashFiles('backend/tests/**/*.py') != '' }}
         run: |
           python -m pip install -U pytest pytest-cov
           pytest -q --maxfail=1 --disable-warnings --cov=app --cov-report=term-missing --cov-fail-under=0
-
 
   frontend:
     name: Frontend CI
@@ -89,6 +88,7 @@ jobs:
 
     defaults:
       run:
+        working-directory: frontend
 
     steps:
       - uses: actions/checkout@v4
@@ -96,10 +96,12 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: "frontend/package-lock.json"
 
       - name: Install deps
-        run: npm ci || npm install
+        run: npm ci
 
       - name: Build
         run: npm run build
