@@ -2,10 +2,10 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop, ci/reset ]
+    branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
-  workflow_dispatch: {}
+  workflow_dispatch: {}   # кнопка “Run workflow”
 
 permissions:
   contents: read
@@ -32,7 +32,6 @@ jobs:
           --health-cmd="pg_isready -U discounthub_user -d discounthub"
           --health-interval=5s --health-timeout=5s --health-retries=30
 
-    # все команды выполняем из каталога backend/
     defaults:
       run:
         working-directory: backend
@@ -43,8 +42,7 @@ jobs:
       POSTGRES_PASSWORD: secret123
       POSTGRES_HOST: localhost
       POSTGRES_PORT: "5432"
-      # ВАЖНО: мы уже внутри backend/, поэтому просто alembic.ini
-      ALEMBIC_CONFIG: alembic.ini
+      ALEMBIC_CONFIG: backend/alembic.ini
       PYTHONPATH: ${{ github.workspace }}/backend
 
     steps:
@@ -74,11 +72,11 @@ jobs:
           done
 
       - name: Alembic upgrade
-        # ВАЖНО: конфиг без префикса backend/
-        run: alembic -c alembic.ini upgrade head
+        run: alembic -c backend/alembic.ini upgrade head
 
       - name: Tests (cov ≥70%)
-        run: pytest -q --maxfail=1 --disable-warnings --cov=app --cov-report=term-missing --cov-fail-under=70
+        run: pytest -q --maxfail=1 --disable-warnings \
+             --cov=app --cov-report=term-missing --cov-fail-under=70
 
   frontend:
     name: Frontend CI
@@ -95,7 +93,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          # кеш временно отключаем, чтобы не падало из-за путей
+          cache: 'npm'
+          cache-dependency-path: 'frontend/package-lock.json'
 
       - name: Install deps
         run: npm ci
