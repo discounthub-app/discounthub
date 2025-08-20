@@ -73,7 +73,7 @@ jobs:
           done
 
       - name: Alembic upgrade
-        run: alembic -c backend/alembic.ini upgrade head
+        run: alembic -c alembic.ini upgrade head
 
       - name: Tests (cov ≥70%)
         run: pytest -q --maxfail=1 --disable-warnings \
