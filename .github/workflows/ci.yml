@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop, ci/reset ]
+    branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
   workflow_dispatch: {}
@@ -32,17 +32,13 @@ jobs:
           --health-cmd="pg_isready -U discounthub_user -d discounthub"
           --health-interval=5s --health-timeout=5s --health-retries=30
 
-    defaults:
-      run:
-        working-directory: backend
-
     env:
       POSTGRES_DB: discounthub
       POSTGRES_USER: discounthub_user
       POSTGRES_PASSWORD: secret123
       POSTGRES_HOST: localhost
       POSTGRES_PORT: "5432"
-      ALEMBIC_CONFIG: backend/alembic.ini
+      # чтобы импорты "from app..." работали
       PYTHONPATH: ${{ github.workspace }}/backend
 
     steps:
@@ -59,10 +55,11 @@ jobs:
           sudo apt-get install -y build-essential libpq-dev
 
       - name: Install Python deps
+        working-directory: backend
         run: |
           python -m pip install -U pip
           pip install -r requirements.txt
-          pip install alembic
+          pip install alembic pytest pytest-cov
 
       - name: Wait for Postgres
         run: |
@@ -71,37 +68,38 @@ jobs:
             sleep 1
           done
 
+      # ВНИМАНИЕ: запускаем из каталога backend и указываем -c alembic.ini
       - name: Alembic upgrade
-        run: alembic -c backend/alembic.ini upgrade head
+        working-directory: backend
+        run: alembic -c alembic.ini upgrade head
 
-      # ===== ТЕСТЫ: ставим pytest/pytest-cov и запускаем,
-      # если есть хоть один файл в backend/tests/**/*.py
       - name: Tests (skip if none)
-        if: ${{ hashFiles('backend/tests/**/*.py') != '' }}
+        working-directory: backend
         run: |
-          python -m pip install -U pytest pytest-cov
-          pytest -q --maxfail=1 --disable-warnings --cov=app --cov-report=term-missing --cov-fail-under=0
+          if ls tests 1>/dev/null 2>&1 || ls test 1>/dev/null 2>&1; then
+            pytest -q --maxfail=1 --disable-warnings \
+              --cov=app --cov-report=term-missing --cov-fail-under=70
+          else
+            echo "No tests directory found — skipping pytest."
+          fi
 
   frontend:
     name: Frontend CI
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: frontend
-
     steps:
       - uses: actions/checkout@v4
 
+      # Без кеша — стабильнее и без ошибок разрешения путей
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "18"
-          cache: "npm"
-          cache-dependency-path: "frontend/package-lock.json"
 
       - name: Install deps
+        working-directory: frontend
         run: npm ci
 
       - name: Build
+        working-directory: frontend
         run: npm run build
