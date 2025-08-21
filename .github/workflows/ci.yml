@@ -31,16 +31,13 @@ jobs:
           - 5432:5432
 
     env:
-      # Pydantic Settings (DB)
       postgres_db: discounthub_test
       postgres_user: discounthub
       postgres_password: discounthub
       postgres_host: localhost
       postgres_port: "5432"
-      # URL для SQLAlchemy
       DATABASE_URL: postgresql+psycopg2://discounthub:discounthub@localhost:5432/discounthub_test
 
-      # Auth/прочие настройки для тестов
       SECRET_KEY: "insecure-test-secret-change-me"
       ALGORITHM: "HS256"
       ACCESS_TOKEN_EXPIRE_MINUTES: "60"
@@ -82,20 +79,18 @@ jobs:
           done
           echo "Postgres is not ready in time"; exit 1
 
-      # В CI не используем миграции: гарантированно пересоздаём схему по моделям
+      # Надёжно пересоздаём схему в тестовой БД по моделям (без alembic)
       - name: Reset DB schema from models (drop_all + create_all)
         working-directory: backend
         env:
           DATABASE_URL: ${{ env.DATABASE_URL }}
         run: |
-          python - <<'PY'
-from app.db import Base, engine
-print("Dropping all tables...")
-Base.metadata.drop_all(bind=engine)
-print("Creating all tables from models...")
-Base.metadata.create_all(bind=engine)
-print("DB schema reset complete.")
-PY
+          python -c "from app.db import Base, engine; \
+          print('Dropping all tables...'); \
+          Base.metadata.drop_all(bind=engine); \
+          print('Creating all tables from models...'); \
+          Base.metadata.create_all(bind=engine); \
+          print('DB schema reset complete.')"
 
       - name: Run tests
         working-directory: backend
@@ -113,7 +108,6 @@ PY
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          # cache отключён, так как нет lock-файла
 
       - name: Install deps
         working-directory: frontend
@@ -124,5 +118,3 @@ PY
         working-directory: frontend
         run: |
           npm run -s build || echo "No build script, skipping"
-
-          
