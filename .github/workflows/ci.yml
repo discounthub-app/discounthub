@@ -35,9 +35,9 @@ jobs:
           --health-retries=5
 
     env:
-      # ВАЖНО: в CI подключаемся к сервису через localhost, а не app_db/db
       DATABASE_URL: postgresql+psycopg2://discounthub:discounthub@localhost:5432/discounthub_test
       PYTHONUNBUFFERED: "1"
+      PYTHONPATH: ${{ github.workspace }}/backend   # ← добавили
 
     steps:
       - name: Checkout
@@ -71,10 +71,7 @@ jobs:
 
       - name: Run tests
         working-directory: backend
-        env:
-          DATABASE_URL: ${{ env.DATABASE_URL }}
         run: pytest -q
-
   frontend:
     name: Frontend (install & build)
     runs-on: ubuntu-latest
