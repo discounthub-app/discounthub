@@ -28,14 +28,10 @@ jobs:
           POSTGRES_PASSWORD: discounthub
         ports:
           - 5432:5432
-        options: >-
-          --health-cmd="pg_isready -U discounthub -d discounthub_test"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
+        # ВАЖНО: без healthcheck — будем ждать БД вручную
+        # options: (удалено)
 
     env:
-      # В CI подключаемся к сервису через localhost
       DATABASE_URL: postgresql+psycopg2://discounthub:discounthub@localhost:5432/discounthub_test
       PYTHONUNBUFFERED: "1"
       PYTHONPATH: ${{ github.workspace }}/backend
@@ -65,10 +61,13 @@ jobs:
         env:
           PGPASSWORD: discounthub
         run: |
-          until pg_isready -h localhost -p 5432 -U discounthub -d discounthub_test; do
-            echo "Waiting for Postgres..."
-            sleep 2
+          for i in {1..60}; do
+            if pg_isready -h localhost -p 5432 -U discounthub -d discounthub_test; then
+              echo "Postgres is ready"; exit 0
+            fi
+            echo "Waiting for Postgres ($i/60)..."; sleep 2
           done
+          echo "Postgres is not ready in time"; exit 1
 
       - name: Run tests
         working-directory: backend
@@ -86,7 +85,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm" # без cache-dependency-path, т.к. package-lock.json нет
+          # cache: "npm"  # УБРАНО: нет lock-файла
 
       - name: Install deps
         working-directory: frontend
