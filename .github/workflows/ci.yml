@@ -28,13 +28,20 @@ jobs:
           POSTGRES_PASSWORD: discounthub
         ports:
           - 5432:5432
-        # ВАЖНО: без healthcheck — будем ждать БД вручную
-        # options: (удалено)
 
     env:
+      # ——— настройки БД для pydantic Settings ———
+      postgres_db: discounthub_test
+      postgres_user: discounthub
+      postgres_password: discounthub
+      postgres_host: localhost
+      postgres_port: "5432"
+      # дублируем явным URL для SQLAlchemy (если код читает именно его)
       DATABASE_URL: postgresql+psycopg2://discounthub:discounthub@localhost:5432/discounthub_test
+
       PYTHONUNBUFFERED: "1"
       PYTHONPATH: ${{ github.workspace }}/backend
+      TESTING: "1"
 
     steps:
       - name: Checkout
@@ -85,7 +92,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          # cache: "npm"  # УБРАНО: нет lock-файла
+          # cache отключён, т.к. нет lock-файла
 
       - name: Install deps
         working-directory: frontend
