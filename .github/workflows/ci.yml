@@ -5,6 +5,7 @@ on:
     branches: [ main, develop, ci/** ]
   pull_request:
     branches: [ main, develop ]
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -30,14 +31,19 @@ jobs:
           - 5432:5432
 
     env:
-      # ——— настройки БД для pydantic Settings ———
+      # Pydantic Settings (DB)
       postgres_db: discounthub_test
       postgres_user: discounthub
       postgres_password: discounthub
       postgres_host: localhost
       postgres_port: "5432"
-      # дублируем явным URL для SQLAlchemy (если код читает именно его)
+      # URL для SQLAlchemy
       DATABASE_URL: postgresql+psycopg2://discounthub:discounthub@localhost:5432/discounthub_test
+
+      # Auth/прочие настройки для тестов
+      SECRET_KEY: "insecure-test-secret-change-me"
+      ALGORITHM: "HS256"
+      ACCESS_TOKEN_EXPIRE_MINUTES: "60"
 
       PYTHONUNBUFFERED: "1"
       PYTHONPATH: ${{ github.workspace }}/backend
@@ -76,6 +82,27 @@ jobs:
           done
           echo "Postgres is not ready in time"; exit 1
 
+      - name: Prepare DB schema (migrations or fallback)
+        working-directory: backend
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+        run: |
+          set -e
+          if [ -f alembic.ini ]; then
+            echo "Running alembic upgrade head (backend/alembic.ini in cwd)"
+            alembic upgrade head
+          elif [ -f backend/alembic.ini ]; then
+            echo "Running alembic -c backend/alembic.ini upgrade head"
+            alembic -c backend/alembic.ini upgrade head
+          else
+            echo "Alembic config not found, using ORM metadata.create_all() fallback"
+            python - <<'PY'
+from app.db import Base, engine
+Base.metadata.create_all(bind=engine)
+print("Created tables via metadata.create_all()")
+PY
+          fi
+
       - name: Run tests
         working-directory: backend
         run: pytest -q
@@ -92,7 +119,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          # cache отключён, т.к. нет lock-файла
+          # cache отключён, так как нет lock-файла
 
       - name: Install deps
         working-directory: frontend
