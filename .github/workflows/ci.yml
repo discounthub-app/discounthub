@@ -82,23 +82,20 @@ jobs:
           done
           echo "Postgres is not ready in time"; exit 1
 
-      - name: Prepare DB schema (migrations + safe fallback)
+      # В CI не используем миграции: гарантированно пересоздаём схему по моделям
+      - name: Reset DB schema from models (drop_all + create_all)
         working-directory: backend
         env:
           DATABASE_URL: ${{ env.DATABASE_URL }}
         run: |
-          set -e
-          if [ -f backend/alembic.ini ]; then
-            echo "Running alembic -c backend/alembic.ini upgrade head"
-            alembic -c backend/alembic.ini upgrade head
-          elif [ -f alembic.ini ]; then
-            echo "Running alembic upgrade head (alembic.ini in cwd)"
-            alembic upgrade head
-          else
-            echo "Alembic config not found — skipping migrations"
-          fi
-          # Гарантированно создаём недостающие таблицы (идемпотентно)
-          python -c "from app.db import Base, engine; Base.metadata.create_all(bind=engine); print('Created tables via metadata.create_all()')"
+          python - <<'PY'
+from app.db import Base, engine
+print("Dropping all tables...")
+Base.metadata.drop_all(bind=engine)
+print("Creating all tables from models...")
+Base.metadata.create_all(bind=engine)
+print("DB schema reset complete.")
+PY
 
       - name: Run tests
         working-directory: backend
