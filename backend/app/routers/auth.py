@@ -60,3 +60,9 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 @router.get("/me", response_model=UserOut)
 def get_me(current_user: User = Depends(get_current_user)):
     return current_user
+
+
+# 🔐 Alias для тестов: /auth/users/me
+@router.get("/users/me", response_model=UserOut)
+def get_users_me(current_user: User = Depends(get_current_user)):
+    return current_user
