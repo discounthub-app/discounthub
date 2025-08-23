@@ -1,3 +1,4 @@
+import uuid
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app
@@ -5,12 +6,19 @@ from app.main import app
 client = TestClient(app)
 
 def test_register_user():
+    unique = uuid.uuid4().hex[:8]
+    email = f"test_{unique}@example.com"
+
     response = client.post("/auth/register", json={
-        "email": "test@example.com",
-        "username": "testuser",
+        "email": email,
+        "username": f"testuser_{unique}",
         "password": "testpass"
     })
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert data["email"] == email
+    assert data["username"].startswith("testuser_")
+    assert data["id"] > 0
 
 def test_login_user():
     response = client.post("/auth/login", data={
