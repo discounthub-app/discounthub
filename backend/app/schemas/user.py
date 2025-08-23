@@ -15,7 +15,7 @@ class UserUpdate(BaseModel):
 
 class UserOut(UserBase):
     id: int
-    is_admin: bool = False  # <--- добавили это поле
+    is_admin: bool = False  # отдаём роль наружу для фронта
 
     model_config = ConfigDict(from_attributes=True)
 
