@@ -8,16 +8,17 @@ client = TestClient(app)
 def test_register_user():
     unique = uuid.uuid4().hex[:8]
     email = f"test_{unique}@example.com"
+    username = f"testuser_{unique}"
 
     response = client.post("/auth/register", json={
         "email": email,
-        "username": f"testuser_{unique}",
+        "username": username,
         "password": "testpass"
     })
     assert response.status_code == 200, response.text
     data = response.json()
     assert data["email"] == email
-    assert data["username"].startswith("testuser_")
+    assert data["username"] == username
     assert data["id"] > 0
 
 def test_login_user():
