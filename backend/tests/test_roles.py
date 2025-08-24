@@ -1,5 +1,7 @@
+import uuid
 import pytest
 from fastapi.testclient import TestClient
+
 from app.main import app
 from app.db import SessionLocal
 from app.models.user import User
@@ -17,11 +19,16 @@ def db():
         db.close()
 
 
+def _unique_email(prefix: str) -> str:
+    return f"{prefix}_{uuid.uuid4().hex[:8]}@example.com"
+
+
 @pytest.fixture(scope="module")
 def normal_user(db):
+    email = _unique_email("normal_user")
     user = User(
-        username="normal_user",
-        email="normal_user@example.com",
+        username=f"normal_user_{uuid.uuid4().hex[:4]}",
+        email=email,
         hashed_password=hash_password("user1234"),
         is_admin=False,
     )
@@ -33,9 +40,10 @@ def normal_user(db):
 
 @pytest.fixture(scope="module")
 def admin_user(db):
+    email = _unique_email("admin_user")
     user = User(
-        username="admin_user",
-        email="admin_user@example.com",
+        username=f"admin_user_{uuid.uuid4().hex[:4]}",
+        email=email,
         hashed_password=hash_password("admin1234"),
         is_admin=True,
     )
@@ -56,7 +64,7 @@ def get_token(email, password):
 
 
 def test_normal_user_cannot_create_category(normal_user):
-    token = get_token("normal_user@example.com", "user1234")
+    token = get_token(normal_user.email, "user1234")
     res = client.post(
         "/categories/",
         headers={"Authorization": f"Bearer {token}"},
@@ -67,7 +75,7 @@ def test_normal_user_cannot_create_category(normal_user):
 
 
 def test_admin_can_create_category(admin_user):
-    token = get_token("admin_user@example.com", "admin1234")
+    token = get_token(admin_user.email, "admin1234")
     res = client.post(
         "/categories/",
         headers={"Authorization": f"Bearer {token}"},
