@@ -65,10 +65,11 @@ def get_token(email, password):
 
 def test_normal_user_cannot_create_category(normal_user):
     token = get_token(normal_user.email, "user1234")
+    name = f"User Category {uuid.uuid4().hex[:6]}"
     res = client.post(
         "/categories/",
         headers={"Authorization": f"Bearer {token}"},
-        json={"name": "User Category"},
+        json={"name": name},
     )
     assert res.status_code == 403
     assert res.json()["detail"] == "Admin access required"
@@ -76,10 +77,11 @@ def test_normal_user_cannot_create_category(normal_user):
 
 def test_admin_can_create_category(admin_user):
     token = get_token(admin_user.email, "admin1234")
+    name = f"Admin Category {uuid.uuid4().hex[:6]}"  # <-- уникальное имя
     res = client.post(
         "/categories/",
         headers={"Authorization": f"Bearer {token}"},
-        json={"name": "Admin Category"},
+        json={"name": name},
     )
-    assert res.status_code == 201
-    assert res.json()["name"] == "Admin Category"
+    assert res.status_code == 201, res.text
+    assert res.json()["name"] == name
