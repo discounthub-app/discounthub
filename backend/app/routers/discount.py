@@ -41,11 +41,20 @@ def get_discounts(
     discounts = q.offset(offset).limit(limit).all()
     return discounts
 
-@router.get("/{discount_id}", response_model=schemas.discount.DiscountOut)
-def get_discount(discount_id: int, db: Session = Depends(get_db)):
+@router.put("/{discount_id}", response_model=schemas.discount.DiscountOut)
+def update_discount(
+    discount_id: int,
+    updated: schemas.discount.DiscountUpdate,   # ← было DiscountCreate
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),           # ← доступ только для админа
+):
     discount = db.query(models.discount.Discount).get(discount_id)
     if not discount:
         raise HTTPException(status_code=404, detail="Discount not found")
+    for key, value in updated.model_dump(exclude_unset=True).items():
+        setattr(discount, key, value)
+    db.commit()
+    db.refresh(discount)
     return discount
 
 @router.put("/{discount_id}", response_model=schemas.discount.DiscountOut)
