@@ -1,0 +1,6 @@
+# Укажите здесь реальные логины/команды в GitHub.
+# Пример: @org/maintainers или @username
+
+*                 @discounthub-app/maintainers
+/backend/         @discounthub-app/maintainers
+/frontend/        @discounthub-app/maintainers
