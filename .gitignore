@@ -1,25 +1,51 @@
-# Python
+# === Python / FastAPI ===
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
+*.pyd
+*.db
+*.sqlite3
+*.egg-info/
 
 # Virtual env
 venv/
 .env
+.env.*
+!.env.example
 
-# Alembic cache
-*.egg-info/
-*.sqlite3
+# Alembic
+alembic/versions/*.pyc
+alembic/versions/__pycache__/
 
-# IDE/editor
+# === Node / Frontend (Vite/React) ===
+node_modules/
+dist/
+.vite/
+.cache/
+out/
+.build/
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# === Expo / React Native ===
+.expo/
+.expo-shared/
+*.expo
+
+# === IDE/Editor ===
 .vscode/
 .idea/
 
-# System
+# === System ===
 .DS_Store
-node_modules/
-.env
-node_modules/
-.env
-node_modules/
-.env
+Thumbs.db
+
+# === Docker ===
+/volumes/
+/data/
+/*.pid
