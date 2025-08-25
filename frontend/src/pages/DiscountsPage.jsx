@@ -1,8 +1,9 @@
+cd /app/frontend && cat > src/pages/DiscountsPage.jsx <<'JSX'
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getFavorites, addFavorite, removeFavorite } from '../api/favorite';
 
-// Базовый URL из Vite ENV (фолбэк — на IP сервера)
+// Базовый URL из Vite ENV (фолбэк)
 const RAW = import.meta?.env?.VITE_API_URL;
 const API_URL = (RAW && String(RAW).trim().replace(/\/+$/, '')) || 'http://62.84.102.222:8000';
 
@@ -20,25 +21,23 @@ export default function DiscountsPage({ user }) {
   // Токен: новый ключ dh_token, фолбэк на старый token
   const token = localStorage.getItem('dh_token') || localStorage.getItem('token');
 
-  // Подгрузить избранное при наличии токена
-  useEffect(() => {
-    let abort = false;
-    async function loadFavs() {
-      try {
-        if (!token) {
-          setFavorites([]);
-          return;
-        }
-        const favs = await getFavorites(token);
-        if (!abort) setFavorites(favs.map((f) => f.discount_id));
-      } catch {
-        if (!abort) setFavorites([]);
+  async function refreshFavorites() {
+    try {
+      if (!token) {
+        setFavorites([]);
+        return;
       }
+      const favs = await getFavorites(token);
+      setFavorites(favs.map((f) => f.discount_id));
+    } catch {
+      setFavorites([]);
     }
-    loadFavs();
-    return () => {
-      abort = true;
-    };
+  }
+
+  // Подгрузить избранное при монтировании
+  useEffect(() => {
+    refreshFavorites();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   // Геолокация при включении onlyNearby
@@ -55,7 +54,7 @@ export default function DiscountsPage({ user }) {
     }
   }, [onlyNearby]);
 
-  // Первичная загрузка
+  // Первичная загрузка скидок
   useEffect(() => {
     let abort = false;
     async function load() {
@@ -81,10 +80,9 @@ export default function DiscountsPage({ user }) {
       }
     }
     load();
-    return () => {
-      abort = true;
-    };
-  }, []); // один раз при монтировании
+    return () => { abort = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Применить фильтры и поиск
   const handleFilter = async (e) => {
@@ -93,7 +91,6 @@ export default function DiscountsPage({ user }) {
     setError(null);
     try {
       const url = new URL(`${API_URL}/discounts/`);
-      // поддержим и q, и query на всякий случай
       if (query) {
         url.searchParams.set('q', query);
         url.searchParams.set('query', query);
@@ -122,23 +119,42 @@ export default function DiscountsPage({ user }) {
     }
   };
 
-  // Обработка избранного
+  // Устойчивая обработка избранного
   const toggleFavorite = async (discountId) => {
     if (!token) return;
+    const isFav = favorites.includes(discountId);
+
     try {
-      if (favorites.includes(discountId)) {
-        await removeFavorite(token, discountId);
-        setFavorites((prev) => prev.filter((id) => id !== discountId));
+      if (!isFav) {
+        // Пытаемся добавить
+        const r = await addFavorite(token, discountId);
+        // если сервер сказал "Already in favorites", попробуем удалить (на всякий случай)
+        if (r?.detail === 'Already in favorites') {
+          await removeFavorite(token, discountId);
+        }
       } else {
-        await addFavorite(token, discountId);
-        setFavorites((prev) => [...prev, discountId]);
+        // Пытаемся удалить
+        try {
+          await removeFavorite(token, discountId);
+        } catch (e) {
+          // Если на сервере нет записи — добавим обратно (выравнивание состояния)
+          const msg = (e && e.message) || '';
+          if (msg.includes('Not in favorites') || msg.includes('404')) {
+            await addFavorite(token, discountId);
+          } else {
+            throw e;
+          }
+        }
       }
-    } catch {
-      // опционально: показать уведомление об ошибке
+    } catch (e) {
+      // опционально: показать уведомление
+      console.warn('favorites toggle failed:', e);
+    } finally {
+      // Всегда синхронизируем с сервером
+      await refreshFavorites();
     }
   };
 
-  // Открыть Яндекс.Карты (пока без меток)
   const handleShowMap = () => {
     window.open('https://yandex.ru/maps/', '_blank');
   };
@@ -189,13 +205,7 @@ export default function DiscountsPage({ user }) {
 
       <button
         onClick={handleShowMap}
-        style={{
-          width: '100%',
-          marginBottom: 16,
-          background: '#ffdb4d',
-          padding: 10,
-          fontWeight: 600,
-        }}
+        style={{ width: '100%', marginBottom: 16, background: '#ffdb4d', padding: 10, fontWeight: 600 }}
       >
         Показать на карте
       </button>
@@ -210,20 +220,11 @@ export default function DiscountsPage({ user }) {
           {discounts.map((discount) => (
             <li
               key={discount.id}
-              style={{
-                border: '1px solid #eee',
-                borderRadius: 10,
-                padding: 12,
-                marginBottom: 10,
-                display: 'flex',
-                alignItems: 'center',
-              }}
+              style={{ border: '1px solid #eee', borderRadius: 10, padding: 12, marginBottom: 10, display: 'flex', alignItems: 'center' }}
             >
               <Link to={`/discounts/${discount.id}`} style={{ flex: 1 }}>
                 <strong>{discount.title || discount.name || `Скидка #${discount.id}`}</strong>
               </Link>
-
-              {/* Звёздочка избранного */}
               <button
                 onClick={() => toggleFavorite(discount.id)}
                 style={{
@@ -232,7 +233,7 @@ export default function DiscountsPage({ user }) {
                   fontSize: 22,
                   color: favorites.includes(discount.id) ? '#f90' : '#bbb',
                   cursor: 'pointer',
-                  marginLeft: 10,
+                  marginLeft: 10
                 }}
                 aria-label="В избранное"
                 title={favorites.includes(discount.id) ? 'Убрать из избранного' : 'В избранное'}
@@ -246,3 +247,5 @@ export default function DiscountsPage({ user }) {
     </div>
   );
 }
+JSX
+cd /app
