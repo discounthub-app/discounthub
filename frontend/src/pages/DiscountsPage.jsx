@@ -1,4 +1,3 @@
-cd /app/frontend && cat > src/pages/DiscountsPage.jsx <<'JSX'
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getFavorites, addFavorite, removeFavorite } from '../api/favorite';
