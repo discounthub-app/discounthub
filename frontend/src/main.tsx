@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider, Link } from 'react-router-dom';
 import LoginPage from './pages/Login';
 import MePage from './pages/Me';
+import DiscountsPage from './pages/DiscountsPage';
 import './index.css';
 
 function Home() {
@@ -12,6 +13,7 @@ function Home() {
       <nav className="space-x-3 underline">
         <Link to="/login">/login</Link>
         <Link to="/me">/me</Link>
+        <Link to="/discounts">/discounts</Link>
       </nav>
     </div>
   );
@@ -21,6 +23,7 @@ const router = createBrowserRouter([
   { path: '/', element: <Home /> },
   { path: '/login', element: <LoginPage /> },
   { path: '/me', element: <MePage /> },
+  { path: '/discounts', element: <DiscountsPage /> },
 ]);
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
