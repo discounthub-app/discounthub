@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
-import LoginPage from './pages/LoginPage';
+import LoginPage from './pages/Login';
 import HomePage from './pages/HomePage';
 import DiscountsPage from './pages/DiscountsPage';
 import DiscountDetailPage from './pages/DiscountDetailPage';

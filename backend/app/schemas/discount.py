@@ -36,3 +36,4 @@ class DiscountOut(DiscountBase):
 
     class Config:
         from_attributes = True
+        

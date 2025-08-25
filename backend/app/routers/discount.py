@@ -4,8 +4,9 @@ from typing import Optional, List
 
 from app.db import get_db
 from app import models, schemas
-from app.dependencies.auth import get_current_user
 from app.models.user import User
+from app.dependencies.auth import get_current_user
+from app.dependencies.roles import require_admin  # <-- новое
 
 router = APIRouter(prefix="/discounts", tags=["Discounts"])
 
@@ -13,7 +14,7 @@ router = APIRouter(prefix="/discounts", tags=["Discounts"])
 def create_discount(
     discount: schemas.discount.DiscountCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    _: User = Depends(require_admin),  # <-- только админ
 ):
     db_discount = models.discount.Discount(**discount.model_dump())
     db.add(db_discount)
@@ -40,15 +41,29 @@ def get_discounts(
     discounts = q.offset(offset).limit(limit).all()
     return discounts
 
-@router.get("/{discount_id}", response_model=schemas.discount.DiscountOut)
-def get_discount(discount_id: int, db: Session = Depends(get_db)):
+@router.put("/{discount_id}", response_model=schemas.discount.DiscountOut)
+def update_discount(
+    discount_id: int,
+    updated: schemas.discount.DiscountUpdate,   # ← было DiscountCreate
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),           # ← доступ только для админа
+):
     discount = db.query(models.discount.Discount).get(discount_id)
     if not discount:
         raise HTTPException(status_code=404, detail="Discount not found")
+    for key, value in updated.model_dump(exclude_unset=True).items():
+        setattr(discount, key, value)
+    db.commit()
+    db.refresh(discount)
     return discount
 
 @router.put("/{discount_id}", response_model=schemas.discount.DiscountOut)
-def update_discount(discount_id: int, updated: schemas.discount.DiscountCreate, db: Session = Depends(get_db)):
+def update_discount(
+    discount_id: int,
+    updated: schemas.discount.DiscountCreate,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),  # <-- только админ
+):
     discount = db.query(models.discount.Discount).get(discount_id)
     if not discount:
         raise HTTPException(status_code=404, detail="Discount not found")
@@ -62,10 +77,8 @@ def update_discount(discount_id: int, updated: schemas.discount.DiscountCreate, 
 def delete_discount(
     discount_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    _: User = Depends(require_admin),  # <-- только админ
 ):
-    if not current_user.is_admin:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Только для админа")
     discount = db.query(models.discount.Discount).get(discount_id)
     if not discount:
         raise HTTPException(status_code=404, detail="Discount not found")
