@@ -245,5 +245,3 @@ export default function DiscountsPage({ user }) {
     </div>
   );
 }
-JSX
-cd /app
