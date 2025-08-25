@@ -2,36 +2,53 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getFavorites, addFavorite, removeFavorite } from '../api/favorite';
 
+// Базовый URL из Vite ENV (фолбэк — на IP сервера)
+const RAW = import.meta?.env?.VITE_API_URL;
+const API_URL = (RAW && String(RAW).trim().replace(/\/+$/, '')) || 'http://62.84.102.222:8000';
+
 export default function DiscountsPage({ user }) {
   const [discounts, setDiscounts] = useState([]);
-  const [favorites, setFavorites] = useState([]); // id-шники избранного
+  const [favorites, setFavorites] = useState([]); // id избранных скидок
   const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [storeId, setStoreId] = useState('');
   const [onlyNearby, setOnlyNearby] = useState(false);
   const [coords, setCoords] = useState(null);
+  const [error, setError] = useState(null);
 
-  // Получение токена
-  const token = localStorage.getItem('token');
+  // Токен: новый ключ dh_token, фолбэк на старый token
+  const token = localStorage.getItem('dh_token') || localStorage.getItem('token');
 
-  // Получить список избранного при загрузке
+  // Подгрузить избранное при наличии токена
   useEffect(() => {
-    if (token) {
-      getFavorites(token)
-        .then(favs => setFavorites(favs.map(f => f.discount_id)))
-        .catch(() => setFavorites([]));
+    let abort = false;
+    async function loadFavs() {
+      try {
+        if (!token) {
+          setFavorites([]);
+          return;
+        }
+        const favs = await getFavorites(token);
+        if (!abort) setFavorites(favs.map((f) => f.discount_id));
+      } catch {
+        if (!abort) setFavorites([]);
+      }
     }
+    loadFavs();
+    return () => {
+      abort = true;
+    };
   }, [token]);
 
-  // Запросить геолокацию пользователя при включении onlyNearby
+  // Геолокация при включении onlyNearby
   useEffect(() => {
     if (onlyNearby && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => setCoords(pos.coords),
-        (err) => {
+        () => {
           setCoords(null);
-          alert("Не удалось получить геолокацию.");
+          alert('Не удалось получить геолокацию.');
           setOnlyNearby(false);
         }
       );
@@ -40,46 +57,88 @@ export default function DiscountsPage({ user }) {
 
   // Первичная загрузка
   useEffect(() => {
-    setLoading(true);
-    fetch('http://62.84.102.222:8000/discounts/')
-      .then(res => res.json())
-      .then(data => setDiscounts(data))
-      .catch(() => setDiscounts([]))
-      .finally(() => setLoading(false));
-  }, []);
+    let abort = false;
+    async function load() {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`${API_URL}/discounts/`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (!res.ok) {
+          const msg = await res.text().catch(() => `HTTP ${res.status}`);
+          throw new Error(msg || `HTTP ${res.status}`);
+        }
+        const data = await res.json();
+        if (!abort) setDiscounts(Array.isArray(data) ? data : data?.items || []);
+      } catch (e) {
+        if (!abort) {
+          setDiscounts([]);
+          setError(e?.message || 'Ошибка загрузки');
+        }
+      } finally {
+        if (!abort) setLoading(false);
+      }
+    }
+    load();
+    return () => {
+      abort = true;
+    };
+  }, []); // один раз при монтировании
 
-  // Фильтрация и поиск
-  const handleFilter = (e) => {
+  // Применить фильтры и поиск
+  const handleFilter = async (e) => {
     e.preventDefault();
     setLoading(true);
-    let url = 'http://62.84.102.222:8000/discounts/?';
-    if (query) url += `query=${encodeURIComponent(query)}&`;
-    if (categoryId) url += `category_id=${categoryId}&`;
-    if (storeId) url += `store_id=${storeId}&`;
-    if (onlyNearby && coords) {
-      url += `lat=${coords.latitude}&lon=${coords.longitude}&`;
-    }
+    setError(null);
+    try {
+      const url = new URL(`${API_URL}/discounts/`);
+      // поддержим и q, и query на всякий случай
+      if (query) {
+        url.searchParams.set('q', query);
+        url.searchParams.set('query', query);
+      }
+      if (categoryId) url.searchParams.set('category_id', String(categoryId));
+      if (storeId) url.searchParams.set('store_id', String(storeId));
+      if (onlyNearby && coords) {
+        url.searchParams.set('lat', String(coords.latitude));
+        url.searchParams.set('lon', String(coords.longitude));
+      }
 
-    fetch(url)
-      .then(res => res.json())
-      .then(data => setDiscounts(data))
-      .catch(() => setDiscounts([]))
-      .finally(() => setLoading(false));
+      const res = await fetch(url.toString(), {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!res.ok) {
+        const msg = await res.text().catch(() => `HTTP ${res.status}`);
+        throw new Error(msg || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      setDiscounts(Array.isArray(data) ? data : data?.items || []);
+    } catch (e) {
+      setDiscounts([]);
+      setError(e?.message || 'Ошибка загрузки');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Обработка избранного
   const toggleFavorite = async (discountId) => {
     if (!token) return;
-    if (favorites.includes(discountId)) {
-      await removeFavorite(token, discountId);
-      setFavorites(favorites.filter(id => id !== discountId));
-    } else {
-      await addFavorite(token, discountId);
-      setFavorites([...favorites, discountId]);
+    try {
+      if (favorites.includes(discountId)) {
+        await removeFavorite(token, discountId);
+        setFavorites((prev) => prev.filter((id) => id !== discountId));
+      } else {
+        await addFavorite(token, discountId);
+        setFavorites((prev) => [...prev, discountId]);
+      }
+    } catch {
+      // опционально: показать уведомление об ошибке
     }
   };
 
-  // Открыть Яндекс.Карты (пока без передачи меток)
+  // Открыть Яндекс.Карты (пока без меток)
   const handleShowMap = () => {
     window.open('https://yandex.ru/maps/', '_blank');
   };
@@ -87,12 +146,13 @@ export default function DiscountsPage({ user }) {
   return (
     <div style={{ padding: 12 }}>
       <h2 style={{ fontSize: 22, margin: '16px 0' }}>Скидки рядом</h2>
+
       <form onSubmit={handleFilter} style={{ marginBottom: 16 }}>
         <input
           type="text"
           placeholder="Поиск"
           value={query}
-          onChange={e => setQuery(e.target.value)}
+          onChange={(e) => setQuery(e.target.value)}
           style={{ marginBottom: 8, width: '100%' }}
         />
         <div style={{ marginBottom: 8 }}>
@@ -100,45 +160,69 @@ export default function DiscountsPage({ user }) {
             type="number"
             placeholder="ID категории"
             value={categoryId}
-            onChange={e => setCategoryId(e.target.value)}
+            onChange={(e) => setCategoryId(e.target.value)}
             style={{ marginRight: 8, width: 120 }}
           />
           <input
             type="number"
             placeholder="ID магазина"
             value={storeId}
-            onChange={e => setStoreId(e.target.value)}
+            onChange={(e) => setStoreId(e.target.value)}
             style={{ marginRight: 8, width: 120 }}
           />
         </div>
+
         <label style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
           <input
             type="checkbox"
             checked={onlyNearby}
-            onChange={e => setOnlyNearby(e.target.checked)}
+            onChange={(e) => setOnlyNearby(e.target.checked)}
             style={{ marginRight: 6 }}
           />
           Только рядом (по геолокации)
         </label>
+
         <button type="submit" style={{ width: '100%', padding: 10 }}>
           Применить фильтры
         </button>
       </form>
+
       <button
         onClick={handleShowMap}
-        style={{ width: '100%', marginBottom: 16, background: '#ffdb4d', padding: 10, fontWeight: 600 }}>
+        style={{
+          width: '100%',
+          marginBottom: 16,
+          background: '#ffdb4d',
+          padding: 10,
+          fontWeight: 600,
+        }}
+      >
         Показать на карте
       </button>
+
       {loading ? (
         <div>Загрузка...</div>
+      ) : error ? (
+        <div style={{ color: '#a00', marginBottom: 10 }}>{error}</div>
       ) : (
         <ul style={{ padding: 0, listStyle: 'none' }}>
           {discounts.length === 0 && <li>Нет скидок</li>}
-          {discounts.map(discount => (
-            <li key={discount.id} style={{ border: '1px solid #eee', borderRadius: 10, padding: 12, marginBottom: 10, display: 'flex', alignItems: 'center' }}>
+          {discounts.map((discount) => (
+            <li
+              key={discount.id}
+              style={{
+                border: '1px solid #eee',
+                borderRadius: 10,
+                padding: 12,
+                marginBottom: 10,
+                display: 'flex',
+                alignItems: 'center',
+              }}
+            >
               <Link to={`/discounts/${discount.id}`} style={{ flex: 1 }}>
-                <strong>{discount.title}</strong>
+                <strong>{discount.title || discount.name || `Скидка #${discount.id}`}</strong>
               </Link>
+
               {/* Звёздочка избранного */}
               <button
                 onClick={() => toggleFavorite(discount.id)}
@@ -148,9 +232,10 @@ export default function DiscountsPage({ user }) {
                   fontSize: 22,
                   color: favorites.includes(discount.id) ? '#f90' : '#bbb',
                   cursor: 'pointer',
-                  marginLeft: 10
+                  marginLeft: 10,
                 }}
                 aria-label="В избранное"
+                title={favorites.includes(discount.id) ? 'Убрать из избранного' : 'В избранное'}
               >
                 ★
               </button>
