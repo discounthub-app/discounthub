@@ -4,6 +4,7 @@ import { createBrowserRouter, RouterProvider, Link } from 'react-router-dom';
 import LoginPage from './pages/Login';
 import MePage from './pages/Me';
 import DiscountsPage from './pages/DiscountsPage';
+import DiscountDetailPage from './pages/DiscountDetailPage'; // 👈 добавлен импорт
 import './index.css';
 
 function Home() {
@@ -24,6 +25,7 @@ const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
   { path: '/me', element: <MePage /> },
   { path: '/discounts', element: <DiscountsPage /> },
+  { path: '/discounts/:id', element: <DiscountDetailPage /> }, // 👈 добавлен роут
 ]);
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
