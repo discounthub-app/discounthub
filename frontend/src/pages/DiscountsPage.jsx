@@ -18,6 +18,7 @@ export default function DiscountsPage({ user }) {
   // токен: новый ключ dh_token, фолбэк на старый token
   const token = localStorage.getItem('dh_token') || localStorage.getItem('token');
 
+  // ---- Favorites helpers ----
   async function refreshFavorites() {
     try {
       if (!token) {
@@ -25,7 +26,7 @@ export default function DiscountsPage({ user }) {
         return;
       }
       const favs = await getFavorites(token);
-      setFavorites(favs.map(f => f.discount_id));
+      setFavorites(favs.map((f) => f.discount_id));
     } catch {
       setFavorites([]);
     }
@@ -36,10 +37,11 @@ export default function DiscountsPage({ user }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
+  // ---- Geolocation ----
   useEffect(() => {
     if (onlyNearby && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        pos => setCoords(pos.coords),
+        (pos) => setCoords(pos.coords),
         () => {
           setCoords(null);
           alert('Не удалось получить геолокацию.');
@@ -49,7 +51,7 @@ export default function DiscountsPage({ user }) {
     }
   }, [onlyNearby]);
 
-  // первичная загрузка списка скидок
+  // ---- Initial load ----
   useEffect(() => {
     let abort = false;
     (async () => {
@@ -71,18 +73,23 @@ export default function DiscountsPage({ user }) {
         if (!abort) setLoading(false);
       }
     })();
-    return () => { abort = true; };
+    return () => {
+      abort = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // фильтр/поиск
+  // ---- Filter/search ----
   const handleFilter = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
     try {
       const url = new URL(`${API_URL}/discounts/`);
-      if (query) { url.searchParams.set('q', query); url.searchParams.set('query', query); }
+      if (query) {
+        url.searchParams.set('q', query);
+        url.searchParams.set('query', query);
+      }
       if (categoryId) url.searchParams.set('category_id', String(categoryId));
       if (storeId) url.searchParams.set('store_id', String(storeId));
       if (onlyNearby && coords) {
@@ -103,7 +110,7 @@ export default function DiscountsPage({ user }) {
     }
   };
 
-  // избранное
+  // ---- Favorites toggle ----
   const toggleFavorite = async (discountId) => {
     if (!token) return;
     try {
@@ -113,7 +120,6 @@ export default function DiscountsPage({ user }) {
         await addFavorite(token, discountId);
       }
     } catch (e) {
-      // опционально: показать уведомление
       console.warn('favorites toggle failed:', e);
     } finally {
       await refreshFavorites();
@@ -179,19 +185,36 @@ export default function DiscountsPage({ user }) {
         <ul style={{ padding: 0, listStyle: 'none' }}>
           {discounts.length === 0 && <li>Нет скидок</li>}
           {discounts.map((d) => (
-            <li key={d.id} style={{ border: '1px solid #eee', borderRadius: 10, padding: 12, marginBottom: 10, display: 'flex', alignItems: 'center' }}>
+            <li
+              key={d.id}
+              style={{
+                border: '1px solid #eee',
+                borderRadius: 10,
+                padding: 12,
+                marginBottom: 10,
+                display: 'flex',
+                alignItems: 'center',
+              }}
+            >
               <Link to={`/discounts/${d.id}`} style={{ flex: 1 }}>
                 <strong>{d.title || d.name || `Скидка #${d.id}`}</strong>
               </Link>
+
+              {/* ⭐ важно остановить переход по Link */}
               <button
-                onClick={() => toggleFavorite(d.id)}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  toggleFavorite(d.id);
+                }}
                 style={{
                   background: 'none',
                   border: 'none',
                   fontSize: 22,
                   color: favorites.includes(d.id) ? '#f90' : '#bbb',
                   cursor: 'pointer',
-                  marginLeft: 10
+                  marginLeft: 10,
                 }}
                 aria-label="В избранное"
                 title={favorites.includes(d.id) ? 'Убрать из избранного' : 'В избранное'}
