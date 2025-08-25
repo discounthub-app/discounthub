@@ -3,8 +3,7 @@ import { Link } from 'react-router-dom';
 import { getFavorites, addFavorite, removeFavorite } from '../api/favorite';
 
 // Базовый URL из Vite ENV (фолбэк)
-const RAW = import.meta?.env?.VITE_API_URL;
-const API_URL = (RAW && String(RAW).trim().replace(/\/+$/, '')) || 'http://62.84.102.222:8000';
+import { API_URL } from '../lib/api';
 
 export default function DiscountsPage({ user }) {
   const [discounts, setDiscounts] = useState([]);
